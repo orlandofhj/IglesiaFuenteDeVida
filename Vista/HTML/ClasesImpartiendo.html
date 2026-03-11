@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gestión Académica: Seguimiento y Registro de Clases</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script>
+    
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#0052cc",
+                        "background-light": "#f4f7fa",
+                        "background-dark": "#0f172a",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.75rem",
+                    },
+                },
+            },
+        };
+        const mockTips = {
+            'Con Jesús': [
+                { id: 1, text: 'Dar a conocer su nombre', status: 'pending' },
+                { id: 2, text: 'Establece a Jesús en los corazones', status: 'pending' },
+                { id: 3, text: 'Enseñar a orar como Él', status: 'pending' },
+                { id: 4, text: 'Vivir en Su presencia', status: 'pending' }
+            ],
+            'Con uno Mismo': [
+                { id: 5, text: 'Amor y misericordia', status: 'pending' },
+                { id: 6, text: 'No tengo derecho a permanecer ofendido', status: 'pending' },
+                { id: 7, text: 'Sanidad interior', status: 'pending' },
+                { id: 8, text: 'Identidad en Cristo', status: 'pending' }
+            ],
+            'Con todos los demás': [
+                { id: 9, text: 'El poder del perdón', status: 'pending' },
+                { id: 10, text: 'Servicio al prójimo', status: 'pending' },
+                { id: 11, text: 'Comunión fraternal', status: 'pending' },
+                { id: 12, text: 'Restauración de relaciones', status: 'pending' }
+            ],
+            'Con el trabajo': [
+                { id: 13, text: 'Excelencia como adoración', status: 'pending' },
+                { id: 14, text: 'Integridad en los negocios', status: 'pending' },
+                { id: 15, text: 'Mayordomía del tiempo', status: 'pending' },
+                { id: 16, text: 'Liderazgo de servicio', status: 'pending' }
+            ],
+            'Con la guerra espiritual': [
+                { id: 17, text: 'La armadura de Dios', status: 'pending' },
+                { id: 18, text: 'Derribando fortalezas', status: 'pending' },
+                { id: 19, text: 'Autoridad del creyente', status: 'pending' },
+                { id: 20, text: 'Intercesión estratégica', status: 'pending' }
+            ]
+        };
+        const mockStudentsDB = [
+            { id: 'V-12345678', name: 'JUAN PÉREZ' },
+            { id: 'V-12345677', name: 'MARÍA GARCÍA' },
+            { id: 'V-1234566', name: 'JOSÉ LUIS' },
+            { id: 'V-87654321', name: 'MARÍA RODRÍGUEZ' },
+            { id: 'E-11223344', name: 'CARLOS GÓMEZ' },
+            { id: 'V-99887766', name: 'ANA LÓPEZ' },
+            { id: 'V-15678901', name: 'MARTA SÁNCHEZ' },
+            { id: 'V-22123456', name: 'CARLOS DÍAZ' },
+            { id: 'V-23987654', name: 'SOFIA BLANCO' },
+            { id: 'V-55667788', name: 'PEDRO ALVARADO' },
+            { id: 'V-44332211', name: 'LUCIA MENDOZA' }
+        ];
+        let activeClasses = [
+            {
+                id: 1,
+                block: 'Con Jesús',
+                subtitle: 'Fundamentos de la Fe',
+                instructor: 'Pastor Juan Pérez',
+                instructorId: 'V-12345',
+                instructorInitials: 'PJ',
+                instructorColor: 'bg-blue-100 text-primary',
+                schedule: { start: '2023-10-01', end: '2023-11-01', timeStart: '08:00', timeEnd: '10:00' },
+                students: [...mockStudentsDB.slice(0, 5)],
+                themeColor: { bg: 'bg-blue-50', text: 'text-blue-600', darkBg: 'dark:bg-blue-900/20', darkText: 'dark:text-blue-300' }
+            }
+        ];
+        let editingClassId = null;
+        let pendingDeleteId = null;
+        let pendingSaveData = null;
+        function toggleUserMenu() {
+            const userMenu = document.getElementById('user-dropdown');
+            userMenu.classList.toggle('hidden');
+        }
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+        function toggleMobileMenu() {
+            const menu = document.getElementById('side-menu');
+            const overlay = document.getElementById('overlay');
+            menu.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+        function toggleSubmenu(id) {
+            const submenu = document.getElementById(id);
+            const arrow = document.getElementById(id + '-arrow');
+            if (submenu.style.maxHeight) {
+                submenu.style.maxHeight = null;
+                submenu.style.opacity = "0";
+                arrow.classList.remove('rotate-180');
+            } else {
+                submenu.style.maxHeight = submenu.scrollHeight + "px";
+                submenu.style.opacity = "1";
+                arrow.classList.add('rotate-180');
+            }
+        }
+        // --- Card Menu Logic ---
+        function toggleCardMenu(event, id) {
+    event.stopPropagation();
+    const menu = document.getElementById(`card-menu-${id}`);
+    
+    // Seleccionamos solo los menús desplegables usando la nueva clase
+    const allMenus = document.querySelectorAll('.menu-dropdown-content');
+    
+    const isCurrentlyOpen = !menu.classList.contains('hidden');
+    
+    // Cerramos todos los menús (esto ya no afectará a los botones)
+    allMenus.forEach(el => {
+        el.classList.add('hidden');
+    });
+    
+    // Abrimos el actual si estaba cerrado
+    if (!isCurrentlyOpen) {
+        menu.classList.remove('hidden');
+    }
+}
+        // Close menus when clicking elsewhere
+        // Cerrar menús al hacer clic fuera de ellos sin afectar a los botones de "puntos"
+// Listener corregido
+window.addEventListener('click', (e) => {
+    // Si el clic NO es en el botón de los puntos, cerramos todos los menús
+    if (!e.target.closest('[id^="card-menu-btn-"]')) {
+        document.querySelectorAll('.menu-dropdown-content').forEach(menu => {
+            menu.classList.add('hidden');
+        });
+    }
+});
+function renderClasses() {
+    const container = document.getElementById('classes-container');
+    container.innerHTML = '';
+    activeClasses.forEach((cls) => {
+        const card = document.createElement('div');
+        card.className = "bg-white dark:bg-slate-800 rounded-3xl p-6 ios-shadow border border-slate-200 dark:border-slate-700 relative flex flex-col";
+        let colorClass = cls.themeColor || { bg: 'bg-slate-50', text: 'text-slate-600', darkBg: 'dark:bg-slate-700/50', darkText: 'dark:text-slate-300' };
+        const displayTimeStart = cls.schedule.timeStart; 
+        const displayTimeEnd = cls.schedule.timeEnd;
+        card.innerHTML = `
+            <div class="flex justify-between items-start mb-4 relative z-10">
+                <span class="px-3 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-[10px] font-bold uppercase tracking-wider rounded-full self-start">En Curso</span>
+                <div class="relative">
+                    <button id="card-menu-btn-${cls.id}" class="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors bg-white dark:bg-slate-800 shadow-sm z-20 relative" onclick="toggleCardMenu(event, ${cls.id})">
+                        <span class="material-icons-round">more_horiz</span>
+                    </button>
+                    <div id="card-menu-${cls.id}" class="menu-dropdown-content absolute right-0 top-full mt-2 w-32 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 hidden z-30 overflow-hidden transform origin-top-right transition-all">
+                        <button onclick="editClass(${cls.id})" class="w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2">
+                            <span class="material-icons-round text-base">edit</span> Editar
+                        </button>
+                        <button onclick="confirmDeleteClass(${cls.id})" class="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 border-t border-slate-100 dark:border-slate-700">
+                            <span class="material-icons-round text-base">delete</span> Eliminar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="pt-2"> 
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1">Bloque: ${cls.block}</h3>
+                <p class="text-sm ${colorClass.text.replace('text-', 'text-opacity-80 ')} font-medium mb-4">${cls.subtitle}</p>
+                <div class="mb-4 bg-slate-50 dark:bg-slate-900/30 p-3 rounded-2xl border border-slate-100 dark:border-slate-800/50">
+                    <div class="grid grid-cols-2 gap-y-2 text-xs">
+                        <div>
+                            <span class="block text-[10px] font-bold text-slate-400 uppercase">Fecha Inicio</span>
+                            <span class="font-semibold text-slate-700 dark:text-slate-300">${cls.schedule.start}</span>
+                        </div>
+                        <div>
+                            <span class="block text-[10px] font-bold text-slate-400 uppercase">Fecha Fin</span>
+                            <span class="font-semibold text-slate-700 dark:text-slate-300">${cls.schedule.end}</span>
+                        </div>
+                        <div>
+                            <span class="block text-[10px] font-bold text-slate-400 uppercase">Hora Inicio</span>
+                            <span class="font-semibold text-slate-700 dark:text-slate-300">${displayTimeStart}</span>
+                        </div>
+                        <div>
+                            <span class="block text-[10px] font-bold text-slate-400 uppercase">Hora Fin</span>
+                            <span class="font-semibold text-slate-700 dark:text-slate-300">${displayTimeEnd}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 mb-6 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl">
+                    <div class="w-10 h-10 rounded-full ${cls.instructorColor} flex items-center justify-center font-bold text-sm shadow-sm">
+                        ${cls.instructorInitials}
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">Instructor</p>
+                        <p class="text-xs font-semibold text-slate-900 dark:text-white">${cls.instructor}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-auto grid grid-cols-1 gap-2">
+                <button class="flex items-center justify-center gap-1.5 py-2.5 ${colorClass.bg} ${colorClass.text} ${colorClass.darkBg} ${colorClass.darkText} text-xs font-bold rounded-xl hover:opacity-90 transition-opacity" onclick="openTipsModal('${cls.block}')">
+                    <span class="material-icons-round text-sm">checklist</span>
+                    Ver Seguimiento de Tips
+                </button>
+                <button class="flex items-center justify-center gap-1.5 py-2.5 bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" onclick="openStudentsModal(${cls.id})">
+                    <span class="material-icons-round text-sm">group</span>
+                    Ver Estudiantes
+                </button>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+        // --- Confirmation Dialog Logic ---
+        function showConfirmDialog(title, message, onConfirm) {
+            const dialog = document.getElementById('confirm-dialog');
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-message').innerText = message;
+            // Remove old listeners
+            const confirmBtn = document.getElementById('confirm-action-btn');
+            const newConfirmBtn = confirmBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+            newConfirmBtn.addEventListener('click', () => {
+                onConfirm();
+                closeConfirmDialog();
+            });
+            dialog.classList.remove('hidden');
+        }
+        function closeConfirmDialog() {
+            document.getElementById('confirm-dialog').classList.add('hidden');
+            pendingDeleteId = null;
+            pendingSaveData = null;
+        }
+        function confirmDeleteClass(id) {
+            pendingDeleteId = id;
+            showConfirmDialog('Eliminar Bloque', '¿Desea eliminar el bloque? Esta acción no se puede deshacer.', executeDeleteClass);
+        }
+        function executeDeleteClass() {
+            if (pendingDeleteId) {
+                activeClasses = activeClasses.filter(c => c.id !== pendingDeleteId);
+                renderClasses();
+            }
+        }
+        function confirmSaveClass(saveFunction) {
+             showConfirmDialog('Guardar Cambios', '¿Desea guardar los cambios realizados?', saveFunction);
+        }
+        function editClass(id) {
+            editingClassId = id;
+            const cls = activeClasses.find(c => c.id === id);
+            if (!cls) return;
+            // Open Modal
+            openClassModal(true); // true indicates edit mode
+            // Fill Data
+            // We need to wait for the select to populate if it hasn't already, but since openClassModal handles population first:
+            const blockSelect = document.getElementById('new-class-block');
+            blockSelect.value = cls.block;
+            document.getElementById('instructor-id').value = cls.instructorId || '';
+            document.getElementById('instructor-name-display').value = cls.instructor;
+            document.getElementById('date-start').value = cls.schedule.start;
+            document.getElementById('date-end').value = cls.schedule.end;
+            document.getElementById('time-start').value = cls.schedule.timeStart;
+            document.getElementById('time-end').value = cls.schedule.timeEnd;
+            // Fill Students
+            const container = document.getElementById('dynamic-students-container');
+            container.innerHTML = '';
+            const msg = document.getElementById('no-students-msg');
+            if(msg) msg.remove(); // Remove default msg
+            if (cls.students && cls.students.length > 0) {
+                cls.students.forEach(st => {
+                    // Extract prefix and cedula logic
+                    let type = 'V';
+                    let cedula = st.id;
+                    if(st.id.includes('-')) {
+                        const parts = st.id.split('-');
+                        type = parts[0];
+                        cedula = parts[1];
+                    }
+                    addNewStudentRow(type, cedula, st.name);
+                });
+            } else {
+                 const newMsg = document.createElement('p');
+                 newMsg.className = "text-center text-xs text-slate-400 italic py-2";
+                 newMsg.id = "no-students-msg";
+                 newMsg.innerText = "Haga clic en 'Añadir' para inscribir estudiantes";
+                 container.appendChild(newMsg);
+            }
+            // Update button text
+            document.getElementById('save-class-btn').textContent = 'Guardar Cambios';
+            document.getElementById('modal-title').textContent = 'Editar Clase';
+        }
+        // --- Class Modal Logic ---
+        function openClassModal(isEdit = false) {
+            const errorAlert = document.getElementById('modal-error-alert');
+            errorAlert.classList.add('hidden');
+            errorAlert.innerText = '';
+            if (!isEdit) {
+                // Reset form completely for new entries
+                editingClassId = null;
+                document.getElementById('create-class-form').reset();
+                document.getElementById('instructor-name-display').value = '';
+                document.getElementById('save-class-btn').textContent = 'Crear Clase';
+                document.getElementById('modal-title').textContent = 'Programar Nueva Clase';
+                // Clear student rows
+                const container = document.getElementById('dynamic-students-container');
+                container.innerHTML = '';
+                const msg = document.createElement('p');
+                msg.className = "text-center text-xs text-slate-400 italic py-2";
+                msg.id = "no-students-msg";
+                msg.innerText = "Haga clic en 'Añadir' para inscribir estudiantes";
+                container.appendChild(msg);
+            }
+            // Populate Blocks
+            const blockSelect = document.getElementById('new-class-block');
+            blockSelect.innerHTML = '<option value="">Seleccione un Bloque</option>';
+            const allBlocks = ['Con Jesús', 'Con uno Mismo', 'Con todos los demás', 'Con el trabajo', 'Con la guerra espiritual'];
+            allBlocks.forEach(block => {
+                const opt = document.createElement('option');
+                opt.value = block;
+                opt.textContent = block;
+                blockSelect.appendChild(opt);
+            });
+            const modal = document.getElementById('class-modal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeClassModal() {
+            const modal = document.getElementById('class-modal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+            editingClassId = null;
+        }
+        function addNewStudentRow(preType = 'V', preCedula = '', preName = '') {
+            const container = document.getElementById('dynamic-students-container');
+            // Remove empty message if exists
+            const emptyMsg = document.getElementById('no-students-msg');
+            if(emptyMsg) emptyMsg.remove();
+            const rowId = 'row-' + Date.now() + Math.random().toString(36).substr(2, 5);
+            const div = document.createElement('div');
+            div.id = rowId;
+            div.className = "flex gap-2 items-center mb-2 animate-fade-in";
+            const isFilled = preName !== '';
+            const nameClass = isFilled ? "text-green-600 font-medium" : "text-slate-500 dark:text-slate-400";
+            div.innerHTML = `
+                <select id="${rowId}-type" class="w-16 rounded-lg border-slate-200 dark:border-slate-600 text-sm focus:ring-primary dark:bg-slate-800 dark:text-white px-2 py-2">
+                    <option value="V" ${preType === 'V' ? 'selected' : ''}>V</option>
+                    <option value="E" ${preType === 'E' ? 'selected' : ''}>E</option>
+                </select>
+                <input type="number" id="${rowId}-cedula" value="${preCedula}" class="w-24 sm:w-32 rounded-lg border-slate-200 dark:border-slate-600 text-sm focus:ring-primary dark:bg-slate-800 dark:text-white px-2 py-2" placeholder="Cédula" oninput="autoFillStudent('${rowId}')">
+                <input type="text" id="${rowId}-name" value="${preName}" class="flex-1 rounded-lg border-slate-200 dark:border-slate-600 text-sm bg-slate-100 dark:bg-slate-900/50 ${nameClass} px-2 py-2" placeholder="Nombre" readonly>
+                <button type="button" onclick="removeDynamicRow('${rowId}')" class="text-red-500 hover:text-red-700 p-1">
+                    <span class="material-icons-round">remove_circle</span>
+                </button>
+            `;
+            container.appendChild(div);
+        }
+        function removeDynamicRow(rowId) {
+            const row = document.getElementById(rowId);
+            if(row) row.remove();
+            const container = document.getElementById('dynamic-students-container');
+            if(container.children.length === 0) {
+                 const msg = document.createElement('p');
+                msg.className = "text-center text-xs text-slate-400 italic py-2";
+                msg.id = "no-students-msg";
+                msg.innerText = "Haga clic en 'Añadir' para inscribir estudiantes";
+                container.appendChild(msg);
+            }
+        }
+        function autoFillStudent(rowId) {
+            const type = document.getElementById(rowId + '-type').value;
+            const cedula = document.getElementById(rowId + '-cedula').value;
+            const nameInput = document.getElementById(rowId + '-name');
+            const fullId = `${type}-${cedula}`;
+            const student = mockStudentsDB.find(s => s.id === fullId);
+            if (student) {
+                nameInput.value = student.name;
+                nameInput.classList.add('text-green-600', 'font-medium');
+                nameInput.classList.remove('text-slate-500');
+            } else {
+                nameInput.value = '';
+                nameInput.classList.remove('text-green-600', 'font-medium');
+                nameInput.classList.add('text-slate-500');
+            }
+        }
+        function handleSaveClass() {
+            const errorAlert = document.getElementById('modal-error-alert');
+            errorAlert.classList.add('hidden');
+            errorAlert.innerText = '';
+            // Validation Fields
+            const block = document.getElementById('new-class-block').value;
+            const instructorId = document.getElementById('instructor-id').value;
+            const instructorName = document.getElementById('instructor-name-display').value;
+            const dateStart = document.getElementById('date-start').value;
+            const dateEnd = document.getElementById('date-end').value;
+            const timeStart = document.getElementById('time-start').value;
+            const timeEnd = document.getElementById('time-end').value;
+            if(!block || !instructorId || !dateStart || !dateEnd || !timeStart || !timeEnd) {
+                errorAlert.innerText = "Por favor complete todos los campos obligatorios de la clase.";
+                errorAlert.classList.remove('hidden');
+                return;
+            }
+            // Validation: Duplicate Block (only for new classes or if changing block name)
+            const isDuplicate = activeClasses.some(c => c.block === block && c.id !== editingClassId);
+            if(isDuplicate) {
+                errorAlert.innerText = `El bloque '${block}' ya está 'En Curso'. No se permiten duplicados.`;
+                errorAlert.classList.remove('hidden');
+                return;
+            }
+            // Harvest students
+            const studentContainer = document.getElementById('dynamic-students-container');
+            const studentRows = Array.from(studentContainer.children).filter(child => child.tagName === 'DIV'); // Filter out the p tag
+            let collectedStudents = [];
+            let seenCedulas = new Set();
+            let duplicateStudentError = false;
+            for (let i = 0; i < studentRows.length; i++) {
+                const rowId = studentRows[i].id;
+                const type = document.getElementById(rowId + '-type').value;
+                const cedula = document.getElementById(rowId + '-cedula').value;
+                const name = document.getElementById(rowId + '-name').value;
+                if (cedula && name) {
+                    const fullId = `${type}-${cedula}`;
+                    if(seenCedulas.has(fullId)) {
+                        duplicateStudentError = true;
+                        break;
+                    }
+                    seenCedulas.add(fullId);
+                    collectedStudents.push({
+                        id: fullId,
+                        name: name
+                    });
+                }
+            }
+            if(duplicateStudentError) {
+                errorAlert.innerText = "Hay estudiantes duplicados (mismo ID) en la lista. Por favor verifique.";
+                errorAlert.classList.remove('hidden');
+                return;
+            }
+            // Store data for confirmation callback
+            pendingSaveData = {
+                 block, instructorId, instructorName, dateStart, dateEnd, timeStart, timeEnd, collectedStudents
+            };
+            // Trigger Confirmation
+            confirmSaveClass(executeSaveClass);
+        }
+        function executeSaveClass() {
+             const { block, instructorId, instructorName, dateStart, dateEnd, timeStart, timeEnd, collectedStudents } = pendingSaveData;
+            if (editingClassId) {
+                // Update existing
+                const index = activeClasses.findIndex(c => c.id === editingClassId);
+                if (index !== -1) {
+                    activeClasses[index].block = block;
+                    activeClasses[index].instructor = instructorName || 'Instructor Invitado';
+                    activeClasses[index].instructorId = instructorId;
+                    activeClasses[index].instructorInitials = (instructorName || 'IN').substring(0,2).toUpperCase();
+                    activeClasses[index].schedule = { start: dateStart, end: dateEnd, timeStart: timeStart, timeEnd: timeEnd };
+                    activeClasses[index].students = collectedStudents;
+                }
+            } else {
+                // Add new class object
+                const newClass = {
+                    id: Date.now(),
+                    block: block,
+                    subtitle: 'Nuevo Ciclo Académico',
+                    instructor: instructorName || 'Instructor Invitado',
+                    instructorId: instructorId,
+                    instructorInitials: instructorName ? instructorName.substring(0,2).toUpperCase() : 'IN',
+                    instructorColor: 'bg-green-100 text-green-700',
+                    schedule: { start: dateStart, end: dateEnd, timeStart: timeStart, timeEnd: timeEnd },
+                    students: collectedStudents,
+                    themeColor: { bg: 'bg-green-50', text: 'text-green-600', darkBg: 'dark:bg-green-900/20', darkText: 'dark:text-green-300' }
+                };
+                activeClasses.push(newClass);
+            }
+            renderClasses();
+            closeClassModal();
+            pendingSaveData = null;
+        }
+        function fetchInstructorName(input) {
+            const nameField = document.getElementById('instructor-name-display');
+            // Mock fetch logic
+            if(input.value.length >= 5) {
+               nameField.value = "Pastor Carlos Gutierrez";
+            } else {
+               nameField.value = "";
+            }
+        }
+        // --- Other Modals ---
+        function openTipsModal(blockName) {
+            const modal = document.getElementById('tips-modal');
+            const container = document.getElementById('tips-container');
+            const title = document.getElementById('tips-modal-title');
+            title.textContent = `Seguimiento de Tips: ${blockName}`;
+            container.innerHTML = '';
+            let tips = mockTips[blockName] || [];
+            if (tips.length === 0) {
+                 container.innerHTML = '<p class="text-center text-slate-500 py-4">No hay tips registrados para este bloque.</p>';
+            }
+            tips.forEach(tip => {
+                const isDone = tip.status === 'done';
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-100 dark:border-slate-600";
+                div.innerHTML = `
+                    <span class="text-sm font-medium text-slate-700 dark:text-slate-200">${tip.text}</span>
+                    <button onclick="toggleTipStatus(this)" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${isDone ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-slate-200 text-slate-600 dark:bg-slate-600 dark:text-slate-400'}">
+                        ${isDone ? '<span class="material-icons-round text-sm">check</span> Realizada' : '<span class="material-icons-round text-sm">schedule</span> Por ver'}
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        function toggleTipStatus(btn) {
+            const isDone = btn.classList.contains('bg-green-100');
+            if (isDone) {
+                btn.className = "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors bg-slate-200 text-slate-600 dark:bg-slate-600 dark:text-slate-400";
+                btn.innerHTML = '<span class="material-icons-round text-sm">schedule</span> Por ver';
+            } else {
+                btn.className = "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+                btn.innerHTML = '<span class="material-icons-round text-sm">check</span> Realizada';
+            }
+        }
+        function closeTipsModal() {
+            document.getElementById('tips-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+        function openStudentsModal(classId) {
+            const modal = document.getElementById('students-modal');
+            const container = document.getElementById('students-list-container');
+            const title = document.getElementById('students-modal-title');
+            const cls = activeClasses.find(c => c.id === classId);
+            if(!cls) return;
+            title.textContent = `Estudiantes: ${cls.block}`;
+            container.innerHTML = '';
+            if (!cls.students || cls.students.length === 0) {
+                container.innerHTML = '<p class="text-center text-slate-500 py-4">No hay estudiantes inscritos.</p>';
+            } else {
+                cls.students.forEach(student => {
+                    const div = document.createElement('div');
+                    div.className = "flex items-center gap-4 p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-xl transition-colors border-b border-slate-50 dark:border-slate-700 last:border-0";
+                    div.innerHTML = `
+                        <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-600 flex items-center justify-center text-slate-500 dark:text-slate-300 font-bold text-xs shrink-0">
+                            ${student.name.substring(0, 2)}
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-slate-900 dark:text-white">${student.name}</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">ID: ${student.id}</p>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeStudentsModal() {
+            document.getElementById('students-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+        window.addEventListener('DOMContentLoaded', () => {
+            renderClasses();
+        });
+    </script>
+<style type="text/tailwindcss">
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .ios-shadow { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400;
+        }
+        .submenu-transition {
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .fab-button { transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .fab-button:active { transform: scale(0.90); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 transition-colors duration-200 min-h-screen flex">
+<div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 hidden lg:hidden" id="overlay" onclick="toggleMobileMenu()"></div>
+<aside class="fixed lg:static top-0 left-0 h-full w-72 bg-white dark:bg-slate-900 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out ios-shadow border-r border-slate-200 dark:border-slate-800 flex-shrink-0" id="side-menu">
+<div class="p-6 flex flex-col h-full">
+<div class="flex items-center justify-between mb-8">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+<span class="material-icons-round text-white text-lg">admin_panel_settings</span>
+</div>
+<span class="font-bold text-xl tracking-tight">Gestión</span>
+</div>
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full lg:hidden" onclick="toggleMobileMenu()">
+<span class="material-icons-round">close</span>
+</button>
+</div>
+<nav class="space-y-1 flex-1 overflow-y-auto no-scrollbar">
+    <a class="flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" href="../../index.html">
+        <span class="material-icons-round">newspaper</span>
+        <span>Noticia</span>
+        </a>
+        <a class="flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" href="Estudios.html">
+        <span class="material-icons-round">school</span>
+        <span>Estudios</span>
+        </a>
+        <a class="flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" href="Usuarios.html">
+        <span class="material-icons-round">people</span>
+        <span>Gestión Usuario</span>
+        </a>
+        <a class="flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" href="Servicios.html">
+        <span class="material-icons-round">volunteer_activism</span>
+        <span>Gestión Servicios</span>
+        </a>
+        <a class="flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" href="Eventos.html">
+        <span class="material-icons-round">event</span>
+        <span>Gestión Eventos</span>
+        </a>
+        <a class="flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" href="Ministerios.html">
+            <span class="material-icons-round">diversity_3</span>
+            <span>Gestión Ministerios</span>
+            </a>
+<div class="submenu-container rounded-xl overflow-hidden transition-colors duration-200 bg-slate-50 dark:bg-slate-800/50">
+<button class="w-full flex items-center justify-between px-4 py-3 text-primary dark:text-white font-medium rounded-xl transition-colors" onclick="toggleSubmenu('academic-submenu')">
+<div class="flex items-center gap-4">
+<span class="material-icons-round">history_edu</span>
+<span>Gestión Académica</span>
+</div>
+<span class="material-icons-round text-slate-400 transition-transform duration-300 rotate-180" id="academic-submenu-arrow">expand_more</span>
+</button>
+<div class="submenu-transition overflow-hidden max-h-[500px] opacity-100" id="academic-submenu" style="max-height: 500px; opacity: 1;">
+<div class="pl-12 pr-4 pb-2 space-y-1 pt-1">
+    <a class="block py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors flex items-center gap-2" href="BloquesyTips.html">
+        <span class="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-600"></span>
+                            Bloques y Tips
+                        </a>
+                        <a class="block py-2 text-sm text-primary font-semibold transition-colors flex items-center gap-2" href="#">
+                            <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                            Clases Impartiendo
+                        </a>
+                        
+</div>
+</div>
+</div>
+<a class="flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" href="Reportes.html">
+    <span class="material-icons-round">analytics</span>
+    <span>Reportes</span>
+    </a>
+</nav>
+<div class="pt-6 mt-auto border-t border-slate-100 dark:border-slate-800">
+<button class="w-full flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" onclick="toggleDarkMode()">
+<span class="material-icons-round dark:hidden">dark_mode</span>
+<span class="material-icons-round hidden dark:block text-yellow-500">light_mode</span>
+<span>Modo Visual</span>
+</button>
+</div>
+</div>
+</aside>
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+<header class="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 py-4">
+<div class="flex items-center justify-between">
+<button class="p-2 text-slate-600 dark:text-slate-400 lg:hidden" onclick="toggleMobileMenu()">
+<span class="material-icons-round">menu</span>
+</button>
+<h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Clases Impartiendo</h1>
+<div class="relative">
+<button class="flex items-center gap-3 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onclick="toggleUserMenu()">
+<div class="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-700">
+<img alt="Perfil" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC09pqrRGrCfShFk5t_Bc_ryqhyn7w_UH67c_SzyEBrOX7_cncxPTJZll1KX7YDRG75BuAgnKwbKiNXOV4PDgr5B2iqLTPdEgQBVyu-nleDwQ1-Dv0nuwyx0IOKbMne3fiYcUFPVQqyWmrDL2Me3Luyanoo2OayOCyRkJBDuBCBxGEGR43I5rej_ghWMpsPprOdEQclu6XleWKQ7HeHeKItDembR7Ybi7z7kS4Upk5Z7Zas-sphck7APAQefViYtyukMoYsTn-0lb7v"/>
+</div>
+<span class="material-icons-round text-slate-400 text-sm">expand_more</span>
+</button>
+<div class="absolute right-0 mt-3 w-48 bg-white dark:bg-slate-800 rounded-2xl ios-shadow border border-slate-100 dark:border-slate-700 hidden" id="user-dropdown">
+<div class="p-2">
+<a class="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl" href="#">Cerrar Sesión</a>
+</div>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto p-4 md:p-10 no-scrollbar">
+<div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 pb-24" id="classes-container">
+</div>
+</main>
+<button class="fab-button fixed bottom-8 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg shadow-blue-500/40 flex items-center justify-center z-40" onclick="openClassModal()">
+<span class="material-icons-round text-3xl">add</span>
+</button>
+</div>
+<div class="fixed inset-0 z-[60] hidden" id="confirm-dialog">
+<div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
+<div class="flex min-h-full items-center justify-center p-4">
+<div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-800 w-full max-w-sm shadow-2xl transition-all p-6">
+<div class="text-center">
+<div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 mb-4">
+<span class="material-icons-round text-primary text-2xl">question_mark</span>
+</div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2" id="confirm-title">Confirmar</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400" id="confirm-message">¿Está seguro de realizar esta acción?</p>
+</div>
+<div class="mt-6 flex gap-3">
+<button class="flex-1 py-2.5 px-4 border border-slate-300 dark:border-slate-600 rounded-xl text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-sm" onclick="closeConfirmDialog()">
+                Cancelar
+            </button>
+<button class="flex-1 py-2.5 px-4 bg-primary text-white rounded-xl font-semibold hover:bg-blue-600 transition-colors text-sm shadow-lg shadow-blue-500/20" id="confirm-action-btn">
+                Sí, Continuar
+            </button>
+</div>
+</div>
+</div>
+</div>
+<div class="fixed inset-0 z-50 hidden" id="tips-modal">
+<div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeTipsModal()"></div>
+<div class="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4">
+<div class="relative transform overflow-hidden rounded-t-3xl sm:rounded-2xl bg-white dark:bg-slate-800 w-full max-w-lg shadow-2xl transition-all flex flex-col h-[70vh] sm:h-auto sm:max-h-[80vh]">
+<div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-white dark:bg-slate-800 sticky top-0 z-10">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white" id="tips-modal-title">Seguimiento de Tips</h3>
+<button class="text-slate-400 p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full" onclick="closeTipsModal()">
+<span class="material-icons-round">close</span>
+</button>
+</div>
+<div class="px-6 py-6 overflow-y-auto flex-1 bg-white dark:bg-slate-800">
+<div class="space-y-3" id="tips-container">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="fixed inset-0 z-50 hidden" id="students-modal">
+<div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeStudentsModal()"></div>
+<div class="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4">
+<div class="relative transform overflow-hidden rounded-t-3xl sm:rounded-2xl bg-white dark:bg-slate-800 w-full max-w-lg shadow-2xl transition-all flex flex-col h-[70vh] sm:h-auto sm:max-h-[80vh]">
+<div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-white dark:bg-slate-800 sticky top-0 z-10">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white" id="students-modal-title">Estudiantes Inscritos</h3>
+<button class="text-slate-400 p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full" onclick="closeStudentsModal()">
+<span class="material-icons-round">close</span>
+</button>
+</div>
+<div class="px-6 py-2 overflow-y-auto flex-1 bg-white dark:bg-slate-800">
+<div class="divide-y divide-slate-100 dark:divide-slate-700" id="students-list-container">
+</div>
+</div>
+<div class="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+<button class="w-full py-3 rounded-xl bg-primary text-white font-semibold shadow-lg shadow-blue-500/20" onclick="closeStudentsModal()">Aceptar</button>
+</div>
+</div>
+</div>
+</div>
+<div class="fixed inset-0 z-50 hidden" id="class-modal">
+<div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeClassModal()"></div>
+<div class="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4">
+<div class="relative transform overflow-hidden rounded-t-3xl sm:rounded-2xl bg-white dark:bg-slate-800 w-full max-w-lg shadow-2xl transition-all flex flex-col h-[85vh] max-h-[90vh]">
+<div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-white dark:bg-slate-800 z-10 flex-shrink-0 sticky top-0">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white" id="modal-title">Programar Nueva Clase</h3>
+<button class="text-slate-400 p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full" onclick="closeClassModal()">
+<span class="material-icons-round">close</span>
+</button>
+</div>
+<div class="px-6 py-6 overflow-y-auto flex-1 bg-white dark:bg-slate-800" id="modal-scroll-area">
+<form class="space-y-6" id="create-class-form" onsubmit="event.preventDefault();">
+<div class="hidden bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 p-4 rounded-xl text-sm font-medium border border-red-100 dark:border-red-800/50" id="modal-error-alert">
+</div>
+<div>
+<label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Título de la Clase (Bloque)</label>
+<select class="w-full rounded-xl border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 focus:ring-primary dark:text-white" id="new-class-block" required="">
+<option value="">Seleccione un Bloque</option>
+</select>
+</div>
+<div class="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-xl space-y-4 border border-slate-100 dark:border-slate-700">
+<h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Instructor</h4>
+<div class="grid grid-cols-3 gap-4">
+<div class="col-span-1">
+<label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">ID / Cédula</label>
+<input class="w-full rounded-lg border-slate-200 dark:border-slate-600 text-sm focus:ring-primary dark:bg-slate-800 dark:text-white" id="instructor-id" oninput="fetchInstructorName(this)" placeholder="V-000" required="" type="text"/>
+</div>
+<div class="col-span-2">
+<label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nombre Completo</label>
+<input class="w-full rounded-lg border-slate-200 dark:border-slate-600 text-sm bg-slate-100 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 cursor-not-allowed" id="instructor-name-display" placeholder="Autocompletado" readonly="" type="text"/>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Fecha Inicio</label>
+<input class="w-full rounded-xl border-slate-200 dark:border-slate-600 text-sm dark:bg-slate-700 dark:text-white" id="date-start" required="" type="date"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Fecha Fin</label>
+<input class="w-full rounded-xl border-slate-200 dark:border-slate-600 text-sm dark:bg-slate-700 dark:text-white" id="date-end" required="" type="date"/>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Hora Inicio</label>
+<input class="w-full rounded-xl border-slate-200 dark:border-slate-600 text-sm dark:bg-slate-700 dark:text-white" id="time-start" required="" type="time"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Hora Fin</label>
+<input class="w-full rounded-xl border-slate-200 dark:border-slate-600 text-sm dark:bg-slate-700 dark:text-white" id="time-end" required="" type="time"/>
+</div>
+</div>
+<div class="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-xl border border-slate-100 dark:border-slate-700 flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                Inscribir Estudiantes
+                            </h4>
+<button class="py-1.5 px-3 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold rounded-lg transition-colors flex items-center gap-1" onclick="addNewStudentRow()" type="button">
+<span class="material-icons-round text-sm">add</span> Añadir
+                            </button>
+</div>
+<div class="space-y-3 min-h-[50px]" id="dynamic-students-container">
+<p class="text-center text-xs text-slate-400 italic py-2" id="no-students-msg">Haga clic en 'Añadir' para inscribir estudiantes</p>
+</div>
+</div>
+</form>
+</div>
+<div class="px-6 py-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 z-10 flex-shrink-0 flex gap-3 pb-8 sm:pb-4">
+<button class="flex-1 py-3.5 rounded-xl border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors" onclick="closeClassModal()">Cancelar</button>
+<button class="flex-1 py-3.5 rounded-xl bg-primary text-white font-semibold hover:bg-blue-600 shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98]" id="save-class-btn" onclick="handleSaveClass()">Crear Clase</button>
+</div>
+</div>
+</div>
+</div>
+</body></html>

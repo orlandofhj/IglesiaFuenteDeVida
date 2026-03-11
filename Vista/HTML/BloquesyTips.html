@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Bloques y Tips</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#0052cc",
+                        "background-light": "#f4f7fa",
+                        "background-dark": "#0f172a",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.75rem",
+                    },
+                },
+            },
+        };
+        // --- Data Store ---
+        let blocksData = [
+            {
+                id: 1,
+                title: "Con Jesús",
+                instructor: "Pastor Juan Pérez",
+                cedula: "V-12.345.678",
+                initials: "PJ",
+                colorClass: "bg-blue-100 dark:bg-blue-900/30 text-primary",
+                tips: [
+                    { title: "Dar a conocer su nombre", description: "Revelar el carácter y la naturaleza de Dios a través de sus nombres bíblicos es el primer paso para una relación íntima." },
+                    { title: "Establece a Jesús en los corazones", description: "Cristo como fundamento inamovible en la vida del creyente, asegurando que Él sea el centro de toda decisión." },
+                    { title: "Mi identidad Jesús", description: "Comprender quiénes somos en Él transforma nuestra autoimagen y nos empodera para vivir como hijos de Dios." },
+                    { title: "Dónde hallar a Díos", description: "La búsqueda constante de su presencia en la oración, la palabra y la comunión diaria." }
+                ]
+            },
+            {
+                id: 2,
+                title: "Con uno Mismo",
+                instructor: "Pastor María Rodríguez",
+                cedula: "V-15.876.543",
+                initials: "MR",
+                colorClass: "bg-purple-100 dark:bg-purple-900/30 text-purple-600",
+                tips: [
+                    { title: "Amor y misericordia", description: "Aprender a tratarse a uno mismo con la misma compasión que Dios nos extiende cada mañana." },
+                    { title: "No tengo derecho a permanecer ofendido", description: "La ofensa es una carga que elegimos soltar para caminar en verdadera libertad espiritual." },
+                    { title: "Hazme ver lo que no veo", description: "Una oración de humildad para descubrir áreas ocultas del carácter que necesitan ser transformadas." },
+                    { title: "Eres libre", description: "Romper las cadenas de la culpa y el pasado para abrazar la libertad gloriosa de los hijos de Dios." }
+                ]
+            },
+            {
+                id: 3,
+                title: "Con todos los demás",
+                instructor: "Pastor Carlos Gutierrez",
+                cedula: "V-10.111.222",
+                initials: "PC",
+                colorClass: "bg-orange-100 dark:bg-orange-900/30 text-orange-600",
+                tips: [
+                    { title: "Dios no ha terminado en ti tampoco en tu hermano", description: "Tener paciencia con el proceso de los demás, reconociendo que todos somos obras en construcción." },
+                    { title: "Si sabes que tu hermano lo está haciendo mal es porque tú lo sabes hacer mejor", description: "La corrección debe venir acompañada del ejemplo y la enseñanza, no solo de la crítica." },
+                    { title: "No hagas a otro lo que no quieres que te hagan a tí", description: "La regla de oro aplicada a nuestras relaciones interpersonales diarias." },
+                    { title: "Amor al prójimo", description: "El segundo mandamiento más grande: amar a los demás de manera práctica y sacrificial." }
+                ]
+            },
+            {
+                id: 4,
+                title: "Con el trabajo",
+                instructor: "Pastor David King",
+                cedula: "V-8.999.000",
+                initials: "PD",
+                colorClass: "bg-green-100 dark:bg-green-900/30 text-green-600",
+                tips: [
+                    { title: "Pasión y sacrificio", description: "Trabajar como para el Señor requiere entrega total y un corazón dispuesto a dar la milla extra." },
+                    { title: "La grandeza del servicio", description: "El liderazgo verdadero se mide por la capacidad de servir a los demás con humildad." },
+                    { title: "Nadie da lo que no tiene", description: "Para influir positivamente en nuestro entorno laboral, primero debemos llenarnos de Dios." },
+                    { title: "La integridad no puede ser supervisada", description: "Hacer lo correcto incluso cuando nadie nos ve es la marca de un verdadero cristiano en el trabajo." }
+                ]
+            },
+            {
+                id: 5,
+                title: "Con la guerra espiritual",
+                instructor: "Pastor Ana Lopez",
+                cedula: "V-11.222.333",
+                initials: "PA",
+                colorClass: "bg-red-100 dark:bg-red-900/30 text-red-600",
+                tips: [
+                    { title: "Soy hombre puesto bajo autoridad", description: "Entender el principio de autoridad es clave para ejercer autoridad espiritual contra las tinieblas." },
+                    { title: "El poder está en tu boca", description: "La vida y la muerte están en poder de la lengua; declaramos victoria conforme a la Palabra." },
+                    { title: "Un soldado dividido no tiene espada", description: "La doble moral y la falta de integridad nos desarman en el campo de batalla espiritual." },
+                    { title: "Marcando la diferencia", description: "Ser luz en medio de las tinieblas requiere una postura firme y diferente al sistema del mundo." }
+                ]
+            }
+        ];
+        let editingBlockId = null;
+        // Used to store temporary ID for deletion or save confirmation context
+        let pendingAction = null; 
+        let pendingId = null;
+        function toggleUserMenu() {
+            const userMenu = document.getElementById('user-dropdown');
+            userMenu.classList.toggle('hidden');
+        }
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+        function toggleMobileMenu() {
+            const menu = document.getElementById('side-menu');
+            const overlay = document.getElementById('overlay');
+            menu.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+        function toggleSubmenu(id) {
+            const submenu = document.getElementById(id);
+            const arrow = document.getElementById(id + '-arrow');
+            const container = submenu.closest('.submenu-container');
+            if (submenu.style.maxHeight) {
+                submenu.style.maxHeight = null;
+                submenu.style.opacity = "0";
+                arrow.classList.remove('rotate-180');
+                if(container) container.classList.remove('bg-slate-50', 'dark:bg-slate-800/50');
+            } else {
+                submenu.style.maxHeight = submenu.scrollHeight + "px";
+                submenu.style.opacity = "1";
+                arrow.classList.add('rotate-180');
+                if(container) container.classList.add('bg-slate-50', 'dark:bg-slate-800/50');
+            }
+        }
+        // --- Confirmation Dialog Logic ---
+        function openConfirmationModal(actionType, id = null) {
+            const modal = document.getElementById('confirmation-modal');
+            const titleEl = document.getElementById('confirm-title');
+            const msgEl = document.getElementById('confirm-message');
+            const confirmBtn = document.getElementById('confirm-action-btn');
+            pendingAction = actionType;
+            pendingId = id;
+            modal.classList.remove('hidden');
+            if (actionType === 'delete') {
+                titleEl.textContent = 'Confirmar Eliminación';
+                msgEl.textContent = '¿Está seguro de eliminar este bloque?';
+                confirmBtn.className = "flex-1 py-3 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 shadow-lg shadow-red-500/20 transition-colors";
+                confirmBtn.textContent = 'Sí, Eliminar';
+            } else if (actionType === 'save') {
+                titleEl.textContent = 'Confirmar Cambios';
+                msgEl.textContent = '¿Está seguro de guardar los cambios?';
+                confirmBtn.className = "flex-1 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-blue-600 shadow-lg shadow-blue-500/20 transition-colors";
+                confirmBtn.textContent = 'Sí, Guardar';
+            }
+        }
+        function closeConfirmationModal() {
+            const modal = document.getElementById('confirmation-modal');
+            modal.classList.add('hidden');
+            pendingAction = null;
+            pendingId = null;
+        }
+        function executeConfirmedAction() {
+            if (pendingAction === 'delete' && pendingId !== null) {
+                performDeleteBlock(pendingId);
+            } else if (pendingAction === 'save') {
+                saveBlock();
+            }
+            closeConfirmationModal();
+        }
+        // Modal logic for Blocks
+        function openBlockModal(isEdit = false, blockId = null) {
+            const modal = document.getElementById('block-modal');
+            const modalTitle = document.getElementById('block-modal-title');
+            const saveBtn = document.getElementById('save-block-btn');
+            // Clear previous content in tips container
+            const tipsContainer = document.getElementById('tips-container');
+            tipsContainer.innerHTML = '';
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; 
+            if (isEdit && blockId) {
+                editingBlockId = blockId;
+                const block = blocksData.find(b => b.id === blockId);
+                if (block) {
+                    modalTitle.textContent = 'Editar Bloque';
+                    saveBtn.textContent = 'Guardar Cambios';
+                    fillBlockForm(block);
+                } else {
+                    console.error("Block not found for id:", blockId);
+                }
+            } else {
+                editingBlockId = null;
+                modalTitle.textContent = 'Agregar Nuevo Bloque';
+                saveBtn.textContent = 'Guardar Bloque';
+                resetBlockForm();
+            }
+            // Close any open card menus
+            document.querySelectorAll('.card-menu').forEach(m => m.classList.add('hidden'));
+        }
+        function closeBlockModal() {
+            const modal = document.getElementById('block-modal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+            resetBlockForm();
+            editingBlockId = null;
+        }
+        function resetBlockForm() {
+            document.getElementById('block-name-input').value = '';
+            document.getElementById('instructor-cedula-input').value = '';
+            document.getElementById('instructor-name-display').value = '';
+            document.getElementById('block-name-error').classList.add('hidden');
+            document.getElementById('save-block-btn').disabled = false;
+            const tipsContainer = document.getElementById('tips-container');
+            tipsContainer.innerHTML = '';
+            addTipField(); 
+        }
+        function fillBlockForm(block) {
+            document.getElementById('block-name-input').value = block.title;
+            document.getElementById('instructor-cedula-input').value = block.cedula;
+            document.getElementById('instructor-name-display').value = block.instructor;
+            const tipsContainer = document.getElementById('tips-container');
+            tipsContainer.innerHTML = '';
+            if (block.tips && block.tips.length > 0) {
+                block.tips.forEach(tip => {
+                    addTipField(tip.title, tip.description);
+                });
+            } else {
+                addTipField();
+            }
+            validateAll();
+        }
+        // Modal logic for Tips List
+        function openTipsListModal(blockId) {
+            const modal = document.getElementById('tips-list-modal');
+            const titleEl = document.getElementById('tips-list-modal-title');
+            const contentEl = document.getElementById('tips-list-content');
+            const block = blocksData.find(b => b.id === blockId);
+            if (block) {
+                if(titleEl) titleEl.textContent = 'Tips de ' + block.title;
+                if (contentEl) {
+                    contentEl.innerHTML = '';
+                    block.tips.forEach(tip => {
+                        const tipEl = document.createElement('div');
+                        tipEl.className = "p-4 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-100 dark:border-slate-700";
+                        tipEl.innerHTML = `
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-1">${tip.title}</h4>
+                            <p class="text-sm text-slate-600 dark:text-slate-400">${tip.description}</p>
+                        `;
+                        contentEl.appendChild(tipEl);
+                    });
+                }
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        function closeTipsListModal() {
+            const modal = document.getElementById('tips-list-modal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+        // Toggle card menu
+        function toggleCardMenu(button) {
+            const menu = button.nextElementSibling;
+            // Close all other open menus first
+            document.querySelectorAll('.card-menu').forEach(m => {
+                if (m !== menu) m.classList.add('hidden');
+            });
+            menu.classList.toggle('hidden');
+        }
+        // Close menus when clicking outside
+        window.onclick = function(event) {
+            if (!event.target.closest('.menu-trigger')) {
+                document.querySelectorAll('.card-menu').forEach(menu => {
+                    menu.classList.add('hidden');
+                });
+            }
+        }
+        function fetchInstructorName(input) {
+            const nameField = document.getElementById('instructor-name-display');
+            // Simulate fetching name based on ID length for demo purposes
+            if(input.value.length > 5) {
+               // Pseudo-random assignment for demo variety
+               const names = ["Pastor Carlos Gutierrez", "Pastor Ana Lopez", "Pastor David King", "Pastor Juan Pérez", "Pastor María Rodríguez"];
+               // Simple hash simulation based on input length
+               const index = input.value.length % names.length;
+               nameField.value = names[index];
+            } else {
+               nameField.value = "";
+            }
+        }
+        function addTipField(title = '', description = '') {
+            const container = document.getElementById('tips-container');
+            const newTip = document.createElement('div');
+            newTip.className = "p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600 relative group tip-entry flex gap-4 items-start";
+            newTip.innerHTML = `
+                <div class="flex-1 space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Nombre del Tip <span class="text-xs text-red-500 hidden error-msg"> - Ya existe</span></label>
+                        <input type="text" value="${title}" oninput="validateTipName(this)" class="tip-name-input w-full rounded-lg border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm focus:border-primary focus:ring-primary dark:text-white" placeholder="Ej. Oración Matutina">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Descripción</label>
+                        <textarea rows="2" class="tip-desc-input w-full rounded-lg border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm focus:border-primary focus:ring-primary dark:text-white" placeholder="Breve descripción...">${description}</textarea>
+                    </div>
+                </div>
+                <button type="button" onclick="removeTipField(this)" class="mt-6 flex-shrink-0 w-10 h-10 flex items-center justify-center bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 rounded-lg transition-colors group-hover:scale-105">
+                    <span class="font-bold text-2xl text-red-600 leading-none" style="margin-top: -4px;">-</span>
+                </button>
+            `;
+            container.appendChild(newTip);
+            // Auto scroll to bottom of modal content if it's a new empty field added by user action
+            const scrollArea = document.querySelector('#block-modal .scrollable-content');
+            if(scrollArea && !title) {
+                setTimeout(() => {
+                    scrollArea.scrollTop = scrollArea.scrollHeight;
+                }, 100);
+            }
+        }
+        function removeTipField(btn) {
+            const container = document.getElementById('tips-container');
+            // If it's the last one, don't remove, just clear
+            if(container.children.length <= 1) {
+                const inputs = btn.closest('.tip-entry').querySelectorAll('input, textarea');
+                inputs.forEach(input => input.value = '');
+                return;
+            }
+            btn.closest('.tip-entry').remove();
+            validateAll(); 
+        }
+        // --- Validation Logic ---
+        function validateBlockName(input) {
+            const name = input.value.trim().toLowerCase();
+            const errorMsg = document.getElementById('block-name-error');
+            // Check if name exists in other blocks excluding current editing block
+            const exists = blocksData.some(b => b.title.toLowerCase() === name && b.id !== editingBlockId);
+            if (exists) {
+                errorMsg.classList.remove('hidden');
+                input.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+            } else {
+                errorMsg.classList.add('hidden');
+                input.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+            }
+            validateAll();
+        }
+        function validateTipName(input) {
+            const currentName = input.value.trim().toLowerCase();
+            const allInputs = document.querySelectorAll('.tip-name-input');
+            let isDuplicate = false;
+            // Check against other inputs in form
+            allInputs.forEach(otherInput => {
+                if (otherInput !== input && otherInput.value.trim().toLowerCase() === currentName && currentName !== "") {
+                    isDuplicate = true;
+                }
+            });
+            const labelError = input.closest('div').querySelector('.error-msg');
+            if (isDuplicate) {
+                labelError.classList.remove('hidden');
+                input.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+            } else {
+                labelError.classList.add('hidden');
+                input.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+            }
+            validateAll();
+        }
+        function validateAll() {
+            const saveBtn = document.getElementById('save-block-btn');
+            const blockNameInput = document.getElementById('block-name-input');
+            const blockName = blockNameInput.value.trim().toLowerCase();
+            // 1. Block name validation
+            const blockExists = blocksData.some(b => b.title.toLowerCase() === blockName && b.id !== editingBlockId);
+            const blockNameEmpty = blockName === "";
+            // 2. Tips validation
+            const tipInputs = document.querySelectorAll('.tip-name-input');
+            let tipsHaveDuplicates = false;
+            let tipsEmpty = true; // Assume empty until found otherwise
+            const tipNames = [];
+            let atLeastOneValidTip = false;
+            tipInputs.forEach(input => {
+                const val = input.value.trim().toLowerCase();
+                if(val !== "") {
+                    atLeastOneValidTip = true;
+                    if(tipNames.includes(val)) tipsHaveDuplicates = true;
+                    tipNames.push(val);
+                }
+            });
+            // Need at least one valid tip
+            tipsEmpty = !atLeastOneValidTip;
+            if (blockExists || blockNameEmpty || tipsHaveDuplicates || tipsEmpty) {
+                saveBtn.disabled = true;
+                saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                saveBtn.disabled = false;
+                saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+        function handleSaveBlock() {
+             // Only ask for confirmation, then save via callback
+             openConfirmationModal('save');
+        }
+        function saveBlock() {
+            const blockName = document.getElementById('block-name-input').value.trim();
+            const instructorName = document.getElementById('instructor-name-display').value;
+            const instructorCedula = document.getElementById('instructor-cedula-input').value;
+            // Collect tips
+            const tipEntries = document.querySelectorAll('.tip-entry');
+            const tips = [];
+            tipEntries.forEach(entry => {
+                const title = entry.querySelector('.tip-name-input').value.trim();
+                const desc = entry.querySelector('.tip-desc-input').value.trim();
+                if(title) {
+                    tips.push({ title: title, description: desc });
+                }
+            });
+            if(tips.length === 0 || !blockName) return; 
+            // Create initials
+            const initials = instructorName ? instructorName.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase() : "NA";
+            if (editingBlockId) {
+                // Update existing block logic fix
+                const index = blocksData.findIndex(b => b.id === editingBlockId);
+                if (index !== -1) {
+                    // Update the array element directly to trigger change in reference
+                    blocksData[index] = {
+                        ...blocksData[index],
+                        title: blockName,
+                        instructor: instructorName,
+                        cedula: instructorCedula,
+                        initials: initials,
+                        tips: tips
+                    };
+                }
+            } else {
+                // Create new block
+                const colors = [
+                    "bg-blue-100 dark:bg-blue-900/30 text-primary",
+                    "bg-purple-100 dark:bg-purple-900/30 text-purple-600",
+                    "bg-orange-100 dark:bg-orange-900/30 text-orange-600",
+                    "bg-green-100 dark:bg-green-900/30 text-green-600",
+                    "bg-pink-100 dark:bg-pink-900/30 text-pink-600"
+                ];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                const newBlock = {
+                    id: Date.now(),
+                    title: blockName,
+                    instructor: instructorName,
+                    cedula: instructorCedula,
+                    initials: initials,
+                    colorClass: randomColor,
+                    tips: tips
+                };
+                blocksData.push(newBlock);
+            }
+            // Force re-render of the list
+            renderAllBlocks();
+            closeBlockModal();
+        }
+        function requestDeleteBlock(blockId) {
+            // Updated function name to clarify intent
+            openConfirmationModal('delete', blockId);
+        }
+        function performDeleteBlock(blockId) {
+            // Filter creates a new array, effectively removing the item
+            blocksData = blocksData.filter(b => b.id !== blockId);
+            // Immediately update UI
+            renderAllBlocks();
+        }
+        function renderAllBlocks() {
+            const container = document.getElementById('blocks-container');
+            container.innerHTML = '';
+            // Add search bar
+            const searchHtml = `
+            <div class="relative w-full">
+                <span class="absolute inset-y-0 left-4 flex items-center text-slate-400">
+                    <span class="material-icons-round">search</span>
+                </span>
+                <input class="w-full bg-white dark:bg-slate-800 border-none rounded-2xl py-4 pl-12 pr-4 ios-shadow focus:ring-2 focus:ring-primary transition-all dark:text-white placeholder-slate-400" placeholder="Buscar bloques académicos..." type="text"/>
+            </div>`;
+            container.insertAdjacentHTML('beforeend', searchHtml);
+            // Render blocks
+            if (blocksData.length === 0) {
+                 container.insertAdjacentHTML('beforeend', '<div class="text-center p-8 text-slate-500">No hay bloques registrados.</div>');
+            } else {
+                blocksData.forEach(block => {
+                    const card = createBlockCardElement(block);
+                    container.appendChild(card);
+                });
+            }
+            // Re-add FAB
+            const fab = document.createElement('button');
+            fab.className = "fab-button fixed bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg shadow-blue-500/40 flex items-center justify-center hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary z-30";
+            fab.onclick = () => openBlockModal();
+            fab.innerHTML = '<span class="material-icons-round text-3xl">add</span>';
+            container.appendChild(fab);
+        }
+        function createBlockCardElement(block) {
+            const card = document.createElement('div');
+            card.className = "bg-white dark:bg-slate-800 rounded-3xl p-6 ios-shadow border border-slate-200 dark:border-slate-700 relative group";
+            // Tips HTML generation
+            let tipsHtml = '';
+            // Show up to 3 tips for better visibility on this specific layout
+            const displayTips = block.tips.slice(0, 3);
+            const remainingCount = block.tips.length - 3;
+            displayTips.forEach(tip => {
+                tipsHtml += `
+                <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 truncate max-w-[100%]">
+                    ${tip.title}
+                </span>`;
+            });
+            let moreBtn = '';
+            if(remainingCount > 0) {
+                moreBtn = `
+                <button class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-50 dark:bg-blue-900/20 text-primary border border-blue-100 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors" onclick="openTipsListModal(${block.id})">
+                    +${remainingCount} más
+                </button>`;
+            }
+            card.innerHTML = `
+                <div class="flex items-start justify-between mb-6">
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">${block.title}</h3>
+                    <div class="relative">
+                        <button class="menu-trigger text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" onclick="toggleCardMenu(this)">
+                            <span class="material-icons-round">more_vert</span>
+                        </button>
+                        <div class="card-menu hidden absolute right-0 mt-2 w-32 bg-white dark:bg-slate-800 rounded-xl ios-shadow border border-slate-100 dark:border-slate-700 z-10 overflow-hidden shadow-xl">
+                            <button onclick="openBlockModal(true, ${block.id})" class="w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-2">
+                                <span class="material-icons-round text-sm">edit</span> Editar
+                            </button>
+                            <button onclick="requestDeleteBlock(${block.id})" class="w-full text-left px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center gap-2">
+                                <span class="material-icons-round text-sm">delete</span> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 flex items-center gap-4 mb-6 border border-slate-100 dark:border-slate-700/50">
+                    <div class="w-12 h-12 rounded-full ${block.colorClass} flex items-center justify-center font-bold text-lg flex-shrink-0">
+                        ${block.initials}
+                    </div>
+                    <div class="flex-1 overflow-hidden">
+                        <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">INSTRUCTOR</p>
+                        <h4 class="font-bold text-slate-900 dark:text-white leading-tight truncate">${block.instructor}</h4>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 truncate">${block.cedula}</p>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-3">TIPS DEL BLOQUE (${block.tips.length})</p>
+                    <div class="flex flex-wrap gap-2">
+                        ${tipsHtml}
+                        ${moreBtn}
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+        // Initialize view with ids added to cards
+        window.addEventListener('DOMContentLoaded', () => {
+            renderAllBlocks();
+        });
+    </script>
+<style type="text/tailwindcss">
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .ios-shadow { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400;
+            transition: all 0.2s ease;
+        }
+        .submenu-transition {
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+        }
+        @media (min-width: 1024px) {
+            .desktop-sidebar-fixed {
+                transform: translateX(0) !important;
+            }
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .fab-button {
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .fab-button:active {
+            transform: scale(0.90);
+        }
+        .modal-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .modal-scroll::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 20px;
+        }
+        .dark .modal-scroll::-webkit-scrollbar-thumb {
+            background-color: #475569;
+        }
+    </style>
+<style>
+        body {
+          min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 transition-colors duration-200 min-h-screen flex">
+<div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 hidden lg:hidden" id="overlay" onclick="toggleMobileMenu()"></div>
+<aside class="fixed lg:static top-0 left-0 h-full w-72 bg-white dark:bg-slate-900 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out ios-shadow border-r border-slate-200 dark:border-slate-800 flex-shrink-0" id="side-menu">
+<div class="p-6 flex flex-col h-full">
+<div class="flex items-center justify-between mb-8">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+<span class="material-icons-round text-white text-lg">admin_panel_settings</span>
+</div>
+<span class="font-bold text-xl tracking-tight">Gestión</span>
+</div>
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full lg:hidden" onclick="toggleMobileMenu()">
+<span class="material-icons-round">close</span>
+</button>
+</div>
+<nav class="space-y-1 flex-1 overflow-y-auto no-scrollbar">
+    <a class="flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" href="../../index.html">
+        <span class="material-icons-round">newspaper</span>
+        <span>Noticia</span>
+        </a>
+        <a class="flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" href="Estudios.html">
+        <span class="material-icons-round">school</span>
+        <span>Estudios</span>
+        </a>
+        <a class="flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" href="Usuarios.html">
+        <span class="material-icons-round">people</span>
+        <span>Gestión Usuario</span>
+        </a>
+        <a class="flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" href="Servicios.html">
+        <span class="material-icons-round">volunteer_activism</span>
+        <span>Gestión Servicios</span>
+        </a>
+        <a class="flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" href="Eventos.html">
+        <span class="material-icons-round">event</span>
+        <span>Gestión Eventos</span>
+        </a>
+        <a class="flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" href="Ministerios.html">
+            <span class="material-icons-round">diversity_3</span>
+            <span>Gestión Ministerios</span>
+            </a>
+<div class="submenu-container rounded-xl overflow-hidden transition-colors duration-200 bg-slate-50 dark:bg-slate-800/50">
+<button class="w-full flex items-center justify-between px-4 py-3 text-primary dark:text-white font-medium rounded-xl transition-colors" onclick="toggleSubmenu('academic-submenu')">
+<div class="flex items-center gap-4">
+<span class="material-icons-round">history_edu</span>
+<span>Gestión Académica</span>
+</div>
+<span class="material-icons-round text-slate-400 transition-transform duration-300 rotate-180" id="academic-submenu-arrow">expand_more</span>
+</button>
+<div class="submenu-transition overflow-hidden max-h-[500px] opacity-100" id="academic-submenu" style="max-height: 500px; opacity: 1;">
+<div class="pl-12 pr-4 pb-2 space-y-1 pt-1">
+<a class="block py-2 text-sm text-primary font-semibold transition-colors flex items-center gap-2" href="#">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                            Bloques y Tips
+                        </a>
+<a class="block py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors flex items-center gap-2" href="ClasesImpartiendo.html">
+<span class="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-600"></span>
+                            Clases Impartiendo
+                        </a>
+</div>
+</div>
+</div>
+<a class="flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" href="Reportes.html">
+    <span class="material-icons-round">analytics</span>
+    <span>Reportes</span>
+    </a>
+</nav>
+<div class="pt-6 mt-auto border-t border-slate-100 dark:border-slate-800">
+<button class="w-full flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" onclick="toggleDarkMode()">
+<span class="material-icons-round dark:hidden">dark_mode</span>
+<span class="material-icons-round hidden dark:block text-yellow-500">light_mode</span>
+<span>Modo Visual</span>
+</button>
+</div>
+</div>
+</aside>
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+<header class="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 py-4">
+<div class="flex items-center justify-between">
+<button class="p-2 text-slate-600 dark:text-slate-400 lg:hidden" onclick="toggleMobileMenu()">
+<span class="material-icons-round">menu</span>
+</button>
+<div class="hidden lg:block">
+<h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Gestión de Bloques y Tips</h1>
+</div>
+<h1 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white lg:hidden">Bloques y Tips</h1>
+<div class="relative">
+<button class="flex items-center gap-3 p-1 pr-3 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onclick="toggleUserMenu()">
+<div class="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-700">
+<img alt="Perfil" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC09pqrRGrCfShFk5t_Bc_ryqhyn7w_UH67c_SzyEBrOX7_cncxPTJZll1KX7YDRG75BuAgnKwbKiNXOV4PDgr5B2iqLTPdEgQBVyu-nleDwQ1-Dv0nuwyx0IOKbMne3fiYcUFPVQqyWmrDL2Me3Luyanoo2OayOCyRkJBDuBCBxGEGR43I5rej_ghWMpsPprOdEQclu6XleWKQ7HeHeKItDembR7Ybi7z7kS4Upk5Z7Zas-sphck7APAQefViYtyukMoYsTn-0lb7v"/>
+</div>
+<span class="hidden md:block text-sm font-medium text-slate-700 dark:text-slate-300">Admin Usuario</span>
+<span class="material-icons-round text-slate-400 text-sm">expand_more</span>
+</button>
+<div class="absolute right-0 mt-3 w-48 bg-white dark:bg-slate-800 rounded-2xl ios-shadow border border-slate-100 dark:border-slate-700 hidden" id="user-dropdown">
+<div class="p-2 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl" href="#">
+<span class="material-icons-round text-lg text-slate-400">person_outline</span>
+                            Config. Perfil
+                        </a>
+<div class="h-px bg-slate-100 dark:bg-slate-700 my-1 mx-2"></div>
+<a class="flex items-center gap-3 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl" href="#">
+<span class="material-icons-round text-lg">logout</span>
+                            Cerrar Sesión
+                        </a>
+</div>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto p-4 md:p-10 no-scrollbar relative">
+<div class="max-w-3xl mx-auto space-y-6 pb-24" id="blocks-container">
+</div>
+</main>
+</div>
+<div aria-labelledby="modal-title" aria-modal="true" class="fixed inset-0 z-50 hidden" id="block-modal" role="dialog">
+<div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeBlockModal()"></div>
+<div class="flex min-h-full items-end justify-center sm:items-center p-0 sm:p-4">
+<div class="relative transform overflow-hidden rounded-t-3xl sm:rounded-2xl bg-white dark:bg-slate-800 text-left shadow-xl transition-all w-full sm:max-w-lg ios-shadow border border-slate-100 dark:border-slate-700 h-[92vh] sm:h-[80vh] flex flex-col">
+<div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-white dark:bg-slate-800 shrink-0 z-10">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white" id="block-modal-title">Agregar Nuevo Bloque</h3>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" onclick="closeBlockModal()">
+<span class="material-icons-round">close</span>
+</button>
+</div>
+<div class="px-6 py-6 overflow-y-auto modal-scroll flex-1 scrollable-content relative">
+<form class="space-y-6 pb-2" onsubmit="event.preventDefault();">
+<div>
+<label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nombre del Bloque <span class="text-red-500">*</span> <span class="text-xs text-red-500 hidden" id="block-name-error"> - Ya existe</span></label>
+<input class="w-full rounded-xl border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white focus:border-primary focus:ring-primary py-3 px-4" id="block-name-input" oninput="validateBlockName(this)" placeholder="Ej. Fundamentos de la Fe" type="text"/>
+</div>
+<div class="bg-slate-50 dark:bg-slate-700/30 p-4 rounded-xl border border-slate-100 dark:border-slate-700 space-y-4">
+<h4 class="text-xs uppercase font-bold text-slate-400">Instructor <span class="text-red-500">*</span></h4>
+<div class="grid grid-cols-3 gap-4">
+<div class="col-span-1">
+<label class="block text-xs font-medium text-slate-500 mb-1">Cédula</label>
+<input class="w-full rounded-lg border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm focus:border-primary focus:ring-primary dark:text-white" id="instructor-cedula-input" onkeyup="fetchInstructorName(this)" placeholder="V-123456" type="text"/>
+</div>
+<div class="col-span-2">
+<label class="block text-xs font-medium text-slate-500 mb-1">Nombre y Apellido</label>
+<input class="w-full rounded-lg border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 text-sm cursor-not-allowed" id="instructor-name-display" placeholder="Se llena automáticamente" readonly="" type="text"/>
+</div>
+</div>
+</div>
+<div>
+<div class="flex items-center justify-between mb-3">
+<label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Tips del Bloque <span class="text-red-500">*</span></label>
+</div>
+<div class="space-y-3" id="tips-container">
+</div>
+<button class="w-full mt-4 py-3 border-2 border-dashed border-slate-200 dark:border-slate-600 rounded-xl text-primary font-semibold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2" onclick="addTipField()" type="button">
+<span class="material-icons-round">add_circle_outline</span>
+                            Agregar otro Tip
+                        </button>
+</div>
+</form>
+</div>
+<div class="px-6 py-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 shrink-0 flex gap-3 z-10 pb-8 sm:pb-4">
+<button class="flex-1 py-3.5 rounded-xl border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" onclick="closeBlockModal()">Cancelar</button>
+<button class="flex-1 py-3.5 rounded-xl bg-primary text-white font-semibold hover:bg-blue-600 shadow-lg shadow-blue-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" id="save-block-btn" onclick="handleSaveBlock()">Guardar Bloque</button>
+</div>
+</div>
+</div>
+</div>
+<div aria-labelledby="modal-title" aria-modal="true" class="fixed inset-0 z-[60] hidden" id="confirmation-modal" role="dialog">
+<div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeConfirmationModal()"></div>
+<div class="flex min-h-full items-center justify-center p-4">
+<div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-800 text-left shadow-xl transition-all w-full max-w-sm ios-shadow border border-slate-100 dark:border-slate-700 flex flex-col">
+<div class="p-6 text-center">
+<div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 mb-4">
+<span class="material-icons-round text-3xl text-slate-600 dark:text-slate-300">help_outline</span>
+</div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2" id="confirm-title">Confirmar Acción</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400" id="confirm-message">¿Está seguro de realizar esta acción?</p>
+</div>
+<div class="px-6 py-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex gap-3">
+<button class="flex-1 py-3 rounded-xl border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" onclick="closeConfirmationModal()">No, Cancelar</button>
+<button class="flex-1 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-blue-600 shadow-lg shadow-blue-500/20 transition-colors" id="confirm-action-btn" onclick="executeConfirmedAction()">Sí, Continuar</button>
+</div>
+</div>
+</div>
+</div>
+<div aria-labelledby="modal-title" aria-modal="true" class="fixed inset-0 z-50 hidden" id="tips-list-modal" role="dialog">
+<div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeTipsListModal()"></div>
+<div class="flex min-h-full items-center justify-center p-4">
+<div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-800 text-left shadow-xl transition-all w-full max-w-md ios-shadow border border-slate-100 dark:border-slate-700 flex flex-col max-h-[85vh]">
+<div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-white dark:bg-slate-800 shrink-0">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white" id="tips-list-modal-title">Tips Completos</h3>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" onclick="closeTipsListModal()">
+<span class="material-icons-round">close</span>
+</button>
+</div>
+<div class="px-6 py-4 overflow-y-auto modal-scroll">
+<div class="space-y-4" id="tips-list-content">
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</body></html>

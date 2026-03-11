@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gestión de Eventos</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script>
+    // 1. Base de datos y buscador
+    const staffDatabase = {
+    "12345678": "Carlos Ruiz",
+    "23456789": "Juan Pérez",
+    "34567890": "Miguel Jimenez"
+};
+
+function buscarPersonal(idInput, nameInput) {
+    let cedula = document.getElementById(idInput).value.trim();
+    const nombreField = document.getElementById(nameInput);
+    
+    // Si el usuario escribe solo números "12345678", lo convertimos al formato "V-12.345.678"
+    // Esto es opcional, si tu base de datos solo tiene números, quita la lógica de formateo.
+    let cedulaFormateada = cedula;
+    if (!cedula.startsWith('V-') && cedula.length > 0) {
+        // Ejemplo simple de formateo si es necesario
+        // Para este ejemplo, buscaremos coincidencia exacta o con prefijo
+    }
+
+    // Buscamos en la base de datos
+    if (staffDatabase[cedula]) {
+        nombreField.value = staffDatabase[cedula];
+        nombreField.readOnly = true; // Bloquea escritura manual
+        nombreField.classList.add('bg-slate-100', 'dark:bg-slate-700/50', 'cursor-not-allowed');
+        nombreField.classList.add('ring-green-500');
+    } else {
+        nombreField.value = "";
+        nombreField.readOnly = true; // Sigue bloqueado si no hay coincidencia
+        nombreField.placeholder = "Ingrese una cédula válida";
+        nombreField.classList.remove('bg-slate-100', 'dark:bg-slate-700/50', 'cursor-not-allowed', 'ring-green-500');
+    }
+}
+
+
+
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#0052cc",
+                        "background-light": "#f4f7fa",
+                        "background-dark": "#0f172a",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.75rem",
+                    },
+                },
+            },
+        };
+        function toggleSubmenu(id) {
+            const submenu = document.getElementById(id);
+            const arrow = document.getElementById(id + '-arrow');
+            const container = submenu.closest('.submenu-container');
+            if (submenu.style.maxHeight) {
+                submenu.style.maxHeight = null;
+                submenu.style.opacity = "0";
+                arrow.classList.remove('rotate-180');
+                container.classList.remove('bg-slate-50', 'dark:bg-slate-800/50');
+            } else {
+                submenu.style.maxHeight = submenu.scrollHeight + "px";
+                submenu.style.opacity = "1";
+                arrow.classList.add('rotate-180');
+                container.classList.add('bg-slate-50', 'dark:bg-slate-800/50');
+            }
+        }
+        // Data structure adapted for Events
+        const eventsData = {
+            'card-1': {
+                state: 'Realizado',
+                hidden: false,
+                attendees: 350,
+                observations: 'Excelente tiempo de compañerismo. Se superó la expectativa de asistencia.',
+                news: 'Se recaudaron fondos para misiones.',
+                image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAAlnVm4LiCgebqZw4VSGHhAQdR7uZasu_cqtcBQzofn_nimjVNY4fFats7_k6qxZbCiVhJ3ALKm0_2enSf3mnbvBdCwbaHF-AYGcAHF7iCzg6ApjCUCq1j6F2fU4Z0mFKU77DgKMyyMGeXh3tGkQAMy1fneVCYXalGnTWlwH_tFOFZ2cx7yI3zr5r6kiGFVZqU_eqJTb7tEemfAwwNxhtibrW2T0tSplF5xO18sxrr4rjFhKRFCCGaPm4MFwgH7QB1QCCPM-pTi1hr',
+                time: '07:00 PM',
+                date: '2023-10-15',
+                location: 'Auditorio Principal',
+                director: 'Hno. Carlos Ruiz',
+                preacher: 'Pastor Juan Pérez',
+                specialGuest: 'Banda Unción'
+            },
+            'card-2': {
+                state: 'Próximo',
+                hidden: false,
+                attendees: 0,
+                observations: '',
+                news: '',
+                image: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?q=80&w=2070&auto=format&fit=crop',
+                time: '04:00 PM',
+                date: '2023-11-10',
+                location: 'Parque Central',
+                director: 'Líder Miguel J.',
+                preacher: 'Evangelista Invitado',
+                specialGuest: 'Grupo de Teatro'
+            },
+            'card-3': {
+                state: 'Oculto', // Logically handled via hidden flag + Próximo/Realizado state, but UI requirement says badge 'Oculto' in grey
+                hidden: true,
+                attendees: 0,
+                observations: '',
+                news: '',
+                image: null,
+                time: '08:00 AM',
+                date: '2023-12-01',
+                location: 'Salón de Conferencias',
+                director: 'Hna. Ana Torres',
+                preacher: 'Pastor Pedro T.',
+                specialGuest: null
+            }
+        };
+        let currentEditingCardId = null;
+        function toggleUserMenu() {
+            const userMenu = document.getElementById('user-dropdown');
+            userMenu.classList.toggle('hidden');
+        }
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+        function toggleMobileMenu() {
+            const menu = document.getElementById('side-menu');
+            const overlay = document.getElementById('overlay');
+            menu.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.toggle('hidden');
+            }
+        }
+        function toggleCardMenu(menuId) {
+            const menu = document.getElementById(menuId);
+            document.querySelectorAll('.card-menu').forEach(el => {
+                if (el.id !== menuId && !el.classList.contains('hidden')) {
+                    el.classList.add('hidden');
+                }
+            });
+            if (menu) {
+                menu.classList.toggle('hidden');
+            }
+        }
+        function openMarkRealizadaModal(cardId) {
+            currentEditingCardId = cardId;
+            document.getElementById('attendees').value = '';
+            document.getElementById('observations').value = '';
+            document.getElementById('news').value = '';
+            document.getElementById('photo-upload').value = ''; 
+            document.getElementById('photo-preview').classList.add('hidden');
+            document.getElementById('photo-preview').src = '';
+            document.getElementById('upload-placeholder').classList.remove('hidden');
+            toggleModal('modal-realizada');
+        }
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('photo-preview');
+                    const placeholder = document.getElementById('upload-placeholder');
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        function saveRealizada() {
+    if (!currentEditingCardId) return;
+
+    const attendeesInput = document.getElementById('attendees').value;
+    const observationsInput = document.getElementById('observations').value;
+    const newsInput = document.getElementById('news').value;
+    const photoInput = document.getElementById('photo-upload');
+
+    if (attendeesInput === '') {
+        alert("Por favor ingrese la cantidad de personas.");
+        return;
+    }
+
+    if (!photoInput.files || !photoInput.files[0]) {
+        alert("La foto del evento es obligatoria para marcarlo como realizado.");
+        return;
+    }
+
+    // Capturamos el ID en una constante local para que no se pierda
+    const idToUpdate = currentEditingCardId;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        // 1. Actualizamos los datos
+        eventsData[idToUpdate].state = 'Realizada';
+        eventsData[idToUpdate].attendees = parseInt(attendeesInput);
+        eventsData[idToUpdate].observations = observationsInput;
+        eventsData[idToUpdate].news = newsInput;
+        eventsData[idToUpdate].image = e.target.result; 
+
+        // 2. Actualizamos la interfaz de la tarjeta específica
+        updateCardUI(idToUpdate); 
+
+        // 3. RECIÉN AQUÍ limpiamos todo
+        toggleModal('modal-realizada');
+        currentEditingCardId = null;
+        
+        // Limpiamos el formulario para la próxima vez
+        document.getElementById('attendees').value = '';
+        document.getElementById('observations').value = '';
+        document.getElementById('news').value = '';
+        document.getElementById('photo-upload').value = '';
+        document.getElementById('photo-preview').classList.add('hidden');
+        document.getElementById('upload-placeholder').classList.remove('hidden');
+    };
+    
+    reader.readAsDataURL(photoInput.files[0]);
+}
+        function toggleVisibility(cardId) {
+            if (!eventsData[cardId]) return;
+            eventsData[cardId].hidden = !eventsData[cardId].hidden;
+            updateCardUI(cardId);
+        }
+        function showDetails(cardId) {
+            const data = eventsData[cardId];
+            if (!data) return;
+            document.getElementById('detail-attendees').textContent = data.attendees;
+            document.getElementById('detail-observations').textContent = data.observations || 'Sin observaciones registradas.';
+            document.getElementById('detail-news').textContent = data.news || 'Sin novedades registradas.';
+            const cardTitle = document.querySelector(`#${cardId} h3`).textContent;
+            document.getElementById('detail-title').textContent = cardTitle; 
+            toggleModal('modal-detalles');
+        }
+        function updateCardUI(cardId) {
+            const card = document.getElementById(cardId);
+            if (!card) return;
+            const data = eventsData[cardId];
+            const badgeContainer = card.querySelector('.badge-container');
+            const footer = card.querySelector('.card-footer');
+            const imgContainer = card.querySelector('.img-container');
+            // Image Update Logic
+            if (data.image) {
+                imgContainer.innerHTML = `<img alt="Foto Evento" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${data.image}"/>`;
+            } else {
+                imgContainer.innerHTML = `<span class="material-icons-round text-6xl text-slate-300 dark:text-slate-600 group-hover:scale-110 transition-transform duration-300">church</span>`;
+            }
+            // Badge Logic
+            let badgeHTML = '';
+            if (data.hidden) {
+                badgeHTML += `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"><span class="material-icons-round text-[10px] mr-1">visibility_off</span>Oculto</span>`;
+                card.classList.add('opacity-75', 'grayscale-[0.5]');
+            } else if (data.state === 'Realizada') {
+                badgeHTML += `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 mr-2">Realizada</span>`;
+                card.classList.remove('opacity-75', 'grayscale-[0.5]');
+            } else {
+                badgeHTML += `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 mr-2">Próximo</span>`;
+                card.classList.remove('opacity-75', 'grayscale-[0.5]');
+            }
+            badgeContainer.innerHTML = badgeHTML;
+            // Footer Logic
+            if (data.state === 'Realizada') {
+                footer.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="material-icons-round text-slate-400 text-lg">groups</span>
+                        <span class="font-semibold text-slate-900 dark:text-white">${data.attendees}</span>
+                        <span class="text-xs text-slate-500">asistentes</span>
+                    </div>
+                    <button class="text-sm font-medium text-primary hover:text-primary/80 flex items-center gap-1" onclick="showDetails('${cardId}')">
+                        Ver observaciones
+                        <span class="material-icons-round text-sm">arrow_forward</span>
+                    </button>
+                `;
+            } else {
+                footer.innerHTML = ``; 
+            }
+            // Update Menu Button Text
+            const menuBtn = document.querySelector(`#menu-${cardId} button[onclick*="toggleVisibility"]`);
+            if (menuBtn) {
+                if (data.hidden) {
+                    menuBtn.innerHTML = `<span class="material-icons-round text-slate-400 text-lg">visibility</span> Mostrar`;
+                } else {
+                    menuBtn.innerHTML = `<span class="material-icons-round text-slate-400 text-lg">visibility_off</span> Ocultar`;
+                }
+            }
+        }
+        function saveNewEvent() {
+    const title = document.getElementById('new-event-title').value;
+    const date = document.getElementById('new-event-date').value;
+    const hour = document.getElementById('new-event-hour').value;
+    const minute = document.getElementById('new-event-minute').value;
+    const ampm = document.getElementById('new-event-ampm').value;
+    const location = document.getElementById('new-event-location').value;
+    
+    // CORRECCIÓN AQUÍ: Agregamos "-name" para que coincida con tu HTML
+    const director = document.getElementById('new-event-director-name').value;
+    const preacher = document.getElementById('new-event-preacher-name').value;
+    const guest = document.getElementById('new-event-guest').value;
+
+    if(!title || !date || !hour || !minute || !ampm || !location || !director || !preacher) {
+        alert('Por favor complete todos los campos obligatorios.');
+        return;
+    }
+   
+            const newId = 'card-' + (Date.now()); 
+            let formattedTime = `${hour}:${minute} ${ampm}`;
+            eventsData[newId] = {
+                state: 'Próximo',
+                hidden: false,
+                attendees: 0,
+                observations: '',
+                news: '',
+                image: null,
+                time: formattedTime,
+                date: date,
+                location: location,
+                director: director,
+                preacher: preacher,
+                specialGuest: guest
+            };
+            const grid = document.querySelector('#events-grid'); 
+            const newCard = document.createElement('article');
+            newCard.className = "bg-white dark:bg-slate-800 rounded-3xl overflow-hidden ios-shadow border border-slate-100 dark:border-slate-700 flex flex-col group hover:border-primary/30 transition-all duration-300 relative";
+            newCard.id = newId;
+            const dateObj = new Date(date + 'T12:00:00'); 
+            const months = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+            const day = dateObj.getDate();
+            const monthStr = months[dateObj.getMonth()];
+            const guestHTML = guest ? `
+                <div class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+                    <span class="material-icons-round text-primary text-base mt-0.5">star</span>
+                    <span class="font-medium">Especial: <span class="font-normal text-slate-500 dark:text-slate-400">${guest}</span></span>
+                </div>` : '';
+            newCard.innerHTML = `
+                <div class="absolute top-3 left-3 z-20 badge-container flex items-center">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 mr-2">
+                        Próximo
+                    </span>
+                </div>
+                <div class="absolute top-3 right-3 z-20">
+                    <button class="p-1 rounded-full bg-slate-200/50 hover:bg-slate-200 text-slate-600 backdrop-blur-sm transition-colors dark:bg-slate-800/50 dark:text-slate-200" onclick="toggleCardMenu('menu-${newId}')">
+                        <span class="material-icons-round text-lg leading-none">more_vert</span>
+                    </button>
+                    <div class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 card-menu z-30" id="menu-${newId}">
+                        <div class="py-1">
+                            <a class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50" href="#">
+                                <span class="material-icons-round text-slate-400 text-lg">edit</span> Modificar
+                            </a>
+                            <button class="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-left" onclick="toggleVisibility('${newId}'); toggleCardMenu('menu-${newId}')">
+                                <span class="material-icons-round text-slate-400 text-lg">visibility_off</span> Ocultar
+                            </button>
+                            <button class="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-left" onclick="openMarkRealizadaModal('${newId}'); toggleCardMenu('menu-${newId}')">
+                                <span class="material-icons-round text-slate-400 text-lg">check_circle</span> Marcar Realizada
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative h-48 overflow-hidden bg-slate-100 dark:bg-slate-900 flex items-center justify-center group-hover:bg-slate-200 dark:group-hover:bg-slate-800 transition-colors img-container">
+                    <span class="material-icons-round text-6xl text-slate-300 dark:text-slate-600 group-hover:scale-110 transition-transform duration-300">church</span>
+                </div>
+                <div class="p-5 flex flex-col flex-1">
+                    <div class="flex justify-between items-start mb-2 pr-2">
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white leading-tight">${title}</h3>
+                    </div>
+                    <div class="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400 mb-4">
+                        <span class="flex items-center gap-1">
+                            <span class="material-icons-round text-sm">calendar_today</span> ${day} ${monthStr}
+                        </span>
+                        <span class="flex items-center gap-1">
+                            <span class="material-icons-round text-sm">schedule</span> ${formattedTime}
+                        </span>
+                    </div>
+                    <div class="space-y-2 mb-4">
+                        <div class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+                            <span class="material-icons-round text-primary text-base mt-0.5">place</span>
+                            <span class="font-medium">Lugar: <span class="font-normal text-slate-500 dark:text-slate-400">${location}</span></span>
+                        </div>
+                         ${guestHTML}
+                        <div class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+                            <span class="material-icons-round text-primary text-base mt-0.5">person</span>
+                            <span class="font-medium">Director: <span class="font-normal text-slate-500 dark:text-slate-400">${director}</span></span>
+                        </div>
+                        <div class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+                            <span class="material-icons-round text-primary text-base mt-0.5">campaign</span>
+                            <span class="font-medium">Predicador: <span class="font-normal text-slate-500 dark:text-slate-400">${preacher}</span></span>
+                        </div>
+                    </div>
+                    <div class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between card-footer min-h-[53px]">
+                    </div>
+                </div>
+            `;
+            grid.insertBefore(newCard, grid.firstChild);
+            toggleModal('modal-nuevo-evento');
+            document.getElementById('form-nuevo-evento').reset();
+        }
+    </script>
+<style type="text/tailwindcss">
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .ios-shadow { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400;
+            transition: all 0.2s ease;
+        }
+        .submenu-transition {
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+</style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 transition-colors duration-200 min-h-screen flex">
+    <div aria-labelledby="modal-title-new" aria-modal="true" class="fixed inset-0 z-[60] hidden" id="modal-nuevo-evento" role="dialog">
+        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onclick="toggleModal('modal-nuevo-evento')"></div>
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-3xl border border-slate-100 dark:border-slate-700 w-full">
+                    <div class="bg-white dark:bg-slate-800 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 sm:mx-0 sm:h-10 sm:w-10">
+                                <span class="material-icons-round text-primary dark:text-blue-400">add_task</span>
+                            </div>
+                            <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                                <h3 class="text-lg font-semibold leading-6 text-slate-900 dark:text-white" id="modal-title-new">Nuevo Evento</h3>
+                                <div class="mt-4">
+                                    <form class="space-y-4" id="form-nuevo-evento">
+                                        <div>
+                                            <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Título del Tema *</label>
+                                            <input class="mt-1 block w-full rounded-md border-slate-300 dark:bg-slate-700 dark:text-white shadow-sm focus:ring-primary sm:text-sm" id="new-event-title" type="text" placeholder="Ej. Concierto de Alabanza"/>
+                                        </div>
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Fecha *</label>
+                                                <input class="mt-1 block w-full rounded-md border-slate-300 dark:bg-slate-700 dark:text-white sm:text-sm" id="new-event-date" type="date"/>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Hora *</label>
+                                                <div class="mt-1 flex gap-2">
+                                                    <select class="block w-full rounded-md border-slate-300 dark:bg-slate-700 dark:text-white sm:text-sm" id="new-event-hour">
+                                                        <option value="07">07</option><option value="08">08</option>
+                                                        <option value="09">09</option><option value="10">10</option>
+                                                    </select>
+                                                    <select class="block w-full rounded-md border-slate-300 dark:bg-slate-700 dark:text-white sm:text-sm" id="new-event-minute">
+                                                        <option value="00">00</option><option value="30">30</option>
+                                                    </select>
+                                                    <select class="block w-24 rounded-md border-slate-300 dark:bg-slate-700 dark:text-white sm:text-sm" id="new-event-ampm">
+                                                        <option value="AM">AM</option><option value="PM">PM</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Lugar *</label>
+                                            <input class="mt-1 block w-full rounded-md border-slate-300 dark:bg-slate-700 dark:text-white sm:text-sm" id="new-event-location" type="text" placeholder="Ubicación"/>
+                                        </div>
+    
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-slate-100 dark:border-slate-700 pt-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Cédula Director</label>
+                                                <input type="text" id="new-event-director-id" oninput="buscarPersonal('new-event-director-id', 'new-event-director-name')" placeholder="Escriba cédula..." class="mt-1 block w-full rounded-md border-slate-300 dark:bg-slate-700 dark:text-white sm:text-sm">
+                                            </div>
+                                            <div class="sm:col-span-2">
+                                                <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Nombre (Automático)</label>
+                                                <input type="text" id="new-event-director-name" readonly class="mt-1 block w-full rounded-md border-slate-300 bg-slate-50 dark:bg-slate-700/50 sm:text-sm">
+                                            </div>
+                                        </div>
+    
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Cédula Predicador</label>
+                                                <input type="text" id="new-event-preacher-id" oninput="buscarPersonal('new-event-preacher-id', 'new-event-preacher-name')" placeholder="Escriba cédula..." class="mt-1 block w-full rounded-md border-slate-300 dark:bg-slate-700 dark:text-white sm:text-sm">
+                                            </div>
+                                            <div class="sm:col-span-2">
+                                                <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Nombre (Automático)</label>
+                                                <input type="text" id="new-event-preacher-name" readonly class="mt-1 block w-full rounded-md border-slate-300 bg-slate-50 dark:bg-slate-700/50 sm:text-sm">
+                                            </div>
+                                        </div>
+    
+                                        <div>
+                                            <label class="block text-sm font-medium text-slate-900 dark:text-slate-200">Participación Especial</label>
+                                            <input class="mt-1 block w-full rounded-md border-slate-300 dark:bg-slate-700 dark:text-white sm:text-sm" id="new-event-guest" type="text" placeholder="Opcional"/>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-700/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                        <button class="inline-flex w-full justify-center rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 sm:ml-3 sm:w-auto" onclick="saveNewEvent()" type="button">Guardar</button>
+                        <button class="mt-3 inline-flex w-full justify-center rounded-lg bg-white dark:bg-slate-700 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-slate-200 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 sm:mt-0 sm:w-auto" onclick="toggleModal('modal-nuevo-evento')" type="button">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<div aria-labelledby="modal-title" aria-modal="true" class="fixed inset-0 z-[60] hidden" id="modal-realizada" role="dialog">
+<div class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onclick="toggleModal('modal-realizada')"></div>
+<div class="fixed inset-0 z-10 overflow-y-auto">
+<div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+<div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-slate-100 dark:border-slate-700">
+<div class="bg-white dark:bg-slate-800 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+<div class="sm:flex sm:items-start">
+<div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30 sm:mx-0 sm:h-10 sm:w-10">
+<span class="material-icons-round text-green-600 dark:text-green-400">check_circle</span>
+</div>
+<div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+<h3 class="text-lg font-semibold leading-6 text-slate-900 dark:text-white" id="modal-title">Finalizar Evento</h3>
+<div class="mt-4 space-y-4">
+<div>
+<label class="block text-sm font-medium leading-6 text-slate-900 dark:text-slate-200 mb-2">Foto del Evento <span class="text-red-500">*</span></label>
+<div class="flex items-center justify-center w-full">
+<label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-700/50 hover:bg-slate-100 border-slate-300 dark:border-slate-600 dark:hover:border-slate-500 relative overflow-hidden group" for="photo-upload">
+<div class="flex flex-col items-center justify-center pt-5 pb-6" id="upload-placeholder">
+<span class="material-icons-round text-3xl text-slate-400 mb-2">add_a_photo</span>
+<p class="mb-2 text-sm text-slate-500 dark:text-slate-400"><span class="font-semibold">Click para subir foto</span></p>
+<p class="text-xs text-slate-500 dark:text-slate-400">SVG, PNG, JPG (MAX. 5MB)</p>
+</div>
+<img alt="Preview" class="hidden absolute inset-0 w-full h-full object-cover rounded-lg" id="photo-preview"/>
+<input accept="image/*" class="hidden" id="photo-upload" onchange="previewImage(event)" type="file"/>
+<div class="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">Cambiar Foto</div>
+</label>
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium leading-6 text-slate-900 dark:text-slate-200" for="attendees">Cantidad de personas <span class="text-red-500">*</span></label>
+<div class="mt-2">
+<input class="block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 dark:bg-slate-700 dark:text-white dark:ring-slate-600" id="attendees" name="attendees" placeholder="0" type="number"/>
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium leading-6 text-slate-900 dark:text-slate-200" for="observations">Observaciones (Opcional)</label>
+<div class="mt-2">
+<textarea class="block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 dark:bg-slate-700 dark:text-white dark:ring-slate-600" id="observations" name="observations" rows="3"></textarea>
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium leading-6 text-slate-900 dark:text-slate-200" for="news">Novedades (Opcional)</label>
+<div class="mt-2">
+<textarea class="block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 dark:bg-slate-700 dark:text-white dark:ring-slate-600" id="news" name="news" rows="2"></textarea>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-slate-50 dark:bg-slate-700/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+<button class="inline-flex w-full justify-center rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 sm:ml-3 sm:w-auto" onclick="saveRealizada()" type="button">Guardar y Finalizar</button>
+<button class="mt-3 inline-flex w-full justify-center rounded-lg bg-white dark:bg-slate-700 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-slate-200 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 sm:mt-0 sm:w-auto" onclick="toggleModal('modal-realizada')" type="button">Cancelar</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div aria-labelledby="modal-title-details" aria-modal="true" class="fixed inset-0 z-[60] hidden" id="modal-detalles" role="dialog">
+<div class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onclick="toggleModal('modal-detalles')"></div>
+<div class="fixed inset-0 z-10 overflow-y-auto">
+<div class="flex min-h-full items-center justify-center p-4 text-center">
+<div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-800 text-left shadow-xl transition-all sm:w-full sm:max-w-lg border border-slate-100 dark:border-slate-700">
+<div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white" id="detail-title">Detalles del Evento</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400">Información registrada</p>
+</div>
+<div class="p-6 space-y-4">
+<div class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
+<span class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Asistencia Total</span>
+<span class="text-3xl font-bold text-slate-900 dark:text-white" id="detail-attendees">0</span>
+<span class="text-sm text-slate-500 dark:text-slate-400 ml-1">personas</span>
+</div>
+<div>
+<h4 class="text-sm font-semibold text-slate-900 dark:text-white mb-2">Observaciones</h4>
+<p class="text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/30 p-3 rounded-lg border border-slate-100 dark:border-slate-700" id="detail-observations">
+                                --
+                            </p>
+</div>
+<div>
+<h4 class="text-sm font-semibold text-slate-900 dark:text-white mb-2">Novedades</h4>
+<p class="text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/30 p-3 rounded-lg border border-slate-100 dark:border-slate-700" id="detail-news">
+                                --
+                            </p>
+</div>
+</div>
+<div class="px-6 py-4 bg-slate-50 dark:bg-slate-700/50 flex justify-end">
+<button class="inline-flex w-full justify-center rounded-lg bg-white dark:bg-slate-700 px-4 py-2 text-sm font-semibold text-slate-900 dark:text-slate-200 shadow-sm ring-1 ring-inset ring-slate-300 dark:ring-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 sm:w-auto" onclick="toggleModal('modal-detalles')" type="button">Cerrar</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 hidden lg:hidden" id="overlay" onclick="toggleMobileMenu()"></div>
+<aside class="fixed lg:static top-0 left-0 h-full w-72 bg-white dark:bg-slate-900 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out ios-shadow border-r border-slate-200 dark:border-slate-800 flex-shrink-0" id="side-menu">
+<div class="p-6 flex flex-col h-full">
+<div class="flex items-center justify-between mb-8">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+<span class="material-icons-round text-white text-lg">admin_panel_settings</span>
+</div>
+<span class="font-bold text-xl tracking-tight">Gestión</span>
+</div>
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full lg:hidden" onclick="toggleMobileMenu()">
+<span class="material-icons-round">close</span>
+</button>
+</div>
+<nav class="space-y-1 flex-1 overflow-y-auto">
+    <a class="flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" href="../../index.html">
+<span class="material-icons-round">newspaper</span>
+<span>Noticia</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" href="Estudios.html">
+<span class="material-icons-round">school</span>
+<span>Estudios</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" href="Usuarios.html">
+<span class="material-icons-round">people</span>
+<span>Gestión Usuario</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" href="Servicios.html">
+<span class="material-icons-round">volunteer_activism</span>
+<span>Gestión Servicios</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 bg-primary text-white font-medium rounded-xl ios-shadow" href="#">
+<span class="material-icons-round">event</span>
+<span>Gestión Eventos</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" href="Ministerios.html">
+    <span class="material-icons-round">diversity_3</span>
+    <span>Gestión Ministerios</span>
+    </a>
+    <div class="submenu-container rounded-xl overflow-hidden transition-colors duration-200">
+        <button class="w-full flex items-center justify-between px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" onclick="toggleSubmenu('academic-submenu')">
+        <div class="flex items-center gap-4">
+        <span class="material-icons-round">history_edu</span>
+        <span>Gestión Académica</span>
+        </div>
+        <span class="material-icons-round text-slate-400 transition-transform duration-300" id="academic-submenu-arrow">expand_more</span>
+        </button>
+        <div class="submenu-transition overflow-hidden max-h-0 opacity-0" id="academic-submenu">
+        <div class="pl-12 pr-4 pb-2 space-y-1 pt-1">
+        <a class="block py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors flex items-center gap-2" href="BloquesyTips.html">
+        <span class="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-600"></span>
+                        Bloques y Tips
+                    </a>
+        <a class="block py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors flex items-center gap-2" href="ClasesImpartiendo.html">
+        <span class="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-600"></span>
+                        Clases Impartiendo
+                    </a>
+        </div>
+        </div>
+        </div>
+<a class="flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" href="Reportes.html">
+<span class="material-icons-round">analytics</span>
+<span>Reportes</span>
+</a>
+</nav>
+<div class="pt-6 mt-auto border-t border-slate-100 dark:border-slate-800">
+<button class="w-full flex items-center gap-4 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors" onclick="toggleDarkMode()">
+<span class="material-icons-round dark:hidden">dark_mode</span>
+<span class="material-icons-round hidden dark:block text-yellow-500">light_mode</span>
+<span>Modo Visual</span>
+</button>
+</div>
+</div>
+</aside>
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+<header class="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 py-4">
+<div class="flex items-center justify-between">
+<button class="p-2 text-slate-600 dark:text-slate-400 lg:hidden" onclick="toggleMobileMenu()">
+<span class="material-icons-round">menu</span>
+</button>
+<div class="hidden lg:block">
+<h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Gestión de Eventos Cristianos Móvil</h1>
+</div>
+<h1 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white lg:hidden">Gestión de Eventos</h1>
+<div class="relative">
+<button class="flex items-center gap-3 p-1 pr-3 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onclick="toggleUserMenu()">
+<div class="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-700">
+<img alt="Perfil de usuario" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC09pqrRGrCfShFk5t_Bc_ryqhyn7w_UH67c_SzyEBrOX7_cncxPTJZll1KX7YDRG75BuAgnKwbKiNXOV4PDgr5B2iqLTPdEgQBVyu-nleDwQ1-Dv0nuwyx0IOKbMne3fiYcUFPVQqyWmrDL2Me3Luyanoo2OayOCyRkJBDuBCBxGEGR43I5rej_ghWMpsPprOdEQclu6XleWKQ7HeHeKItDembR7Ybi7z7kS4Upk5Z7Zas-sphck7APAQefViYtyukMoYsTn-0lb7v"/>
+</div>
+<span class="hidden md:block text-sm font-medium text-slate-700 dark:text-slate-300">Admin Usuario</span>
+<span class="material-icons-round text-slate-400 text-sm">expand_more</span>
+</button>
+<div class="absolute right-0 mt-3 w-48 bg-white dark:bg-slate-800 rounded-2xl ios-shadow border border-slate-100 dark:border-slate-700 hidden" id="user-dropdown">
+<div class="p-2 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl" href="#">
+<span class="material-icons-round text-lg text-slate-400">person_outline</span>
+                                Config. Perfil
+                            </a>
+<div class="h-px bg-slate-100 dark:bg-slate-700 my-1 mx-2"></div>
+<a class="flex items-center gap-3 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl" href="#">
+<span class="material-icons-round text-lg">logout</span>
+                                Cerrar Sesión
+                            </a>
+</div>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto p-6 lg:p-10 no-scrollbar pb-24">
+<div class="max-w-7xl mx-auto space-y-8">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div>
+<h2 class="text-3xl font-bold dark:text-white tracking-tight">Eventos de la Iglesia</h2>
+<p class="text-slate-500 dark:text-slate-400 mt-1">Planificación y seguimiento de eventos especiales.</p>
+</div>
+<div class="flex gap-2"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="events-grid">
+<article class="bg-white dark:bg-slate-800 rounded-3xl overflow-hidden ios-shadow border border-slate-100 dark:border-slate-700 flex flex-col group hover:border-primary/30 transition-all duration-300 relative" id="card-1">
+<div class="absolute top-3 left-3 z-20 badge-container flex items-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 mr-2">
+                                Realizada
+                            </span>
+</div>
+<div class="absolute top-3 right-3 z-20">
+<button class="p-1 rounded-full bg-black/10 hover:bg-black/20 text-white backdrop-blur-sm transition-colors" onclick="toggleCardMenu('menu-card-1')">
+<span class="material-icons-round text-lg leading-none">more_vert</span>
+</button>
+<div class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 card-menu z-30" id="menu-card-1">
+<div class="py-1">
+<a class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50" href="#">
+<span class="material-icons-round text-slate-400 text-lg">edit</span> Modificar
+                                    </a>
+<button class="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-left" onclick="toggleVisibility('card-1'); toggleCardMenu('menu-card-1')">
+<span class="material-icons-round text-slate-400 text-lg">visibility_off</span> Ocultar
+                                    </button>
+<button class="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-left" onclick="openMarkRealizadaModal('card-1'); toggleCardMenu('menu-card-1')">
+<span class="material-icons-round text-slate-400 text-lg">check_circle</span> Marcar Realizada
+                                    </button>
+</div>
+</div>
+</div>
+<div class="relative h-48 overflow-hidden img-container">
+<img alt="Evento" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAlnVm4LiCgebqZw4VSGHhAQdR7uZasu_cqtcBQzofn_nimjVNY4fFats7_k6qxZbCiVhJ3ALKm0_2enSf3mnbvBdCwbaHF-AYGcAHF7iCzg6ApjCUCq1j6F2fU4Z0mFKU77DgKMyyMGeXh3tGkQAMy1fneVCYXalGnTWlwH_tFOFZ2cx7yI3zr5r6kiGFVZqU_eqJTb7tEemfAwwNxhtibrW2T0tSplF5xO18sxrr4rjFhKRFCCGaPm4MFwgH7QB1QCCPM-pTi1hr"/>
+</div>
+<div class="p-5 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-2 pr-2">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white leading-tight">Noche de Adoración Especial</h3>
+</div>
+<div class="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400 mb-4">
+<span class="flex items-center gap-1">
+<span class="material-icons-round text-sm">calendar_today</span> 15 OCT
+                                </span>
+<span class="flex items-center gap-1">
+<span class="material-icons-round text-sm">schedule</span> 07:00 PM
+                                </span>
+</div>
+<div class="space-y-2 mb-4">
+<div class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+<span class="material-icons-round text-primary text-base mt-0.5">place</span>
+<span class="font-medium">Lugar: <span class="font-normal text-slate-500 dark:text-slate-400">Auditorio Principal</span></span>
+</div>
+<div class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+<span class="material-icons-round text-primary text-base mt-0.5">star</span>
+<span class="font-medium">Especial: <span class="font-normal text-slate-500 dark:text-slate-400">Banda Unción</span></span>
+</div>
+<div class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+<span class="material-icons-round text-primary text-base mt-0.5">person</span>
+<span class="font-medium">Director: <span class="font-normal text-slate-500 dark:text-slate-400">Hno. Carlos Ruiz</span></span>
+</div>
+<div class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+<span class="material-icons-round text-primary text-base mt-0.5">campaign</span>
+<span class="font-medium">Predicador: <span class="font-normal text-slate-500 dark:text-slate-400">Pastor Juan Pérez</span></span>
+</div>
+</div>
+<div class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between card-footer min-h-[53px]">
+<div class="flex items-center gap-2">
+<span class="material-icons-round text-slate-400 text-lg">groups</span>
+<span class="font-semibold text-slate-900 dark:text-white">350</span>
+<span class="text-xs text-slate-500">asistentes</span>
+</div>
+<button class="text-sm font-medium text-primary hover:text-primary/80 flex items-center gap-1" onclick="showDetails('card-1')">
+                                    Ver observaciones
+                                    <span class="material-icons-round text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</article>
+<article class="bg-white dark:bg-slate-800 rounded-3xl overflow-hidden ios-shadow border border-slate-100 dark:border-slate-700 flex flex-col group hover:border-primary/30 transition-all duration-300 relative" id="card-2">
+<div class="absolute top-3 left-3 z-20 badge-container flex items-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 mr-2">
+                                Próximo
+                            </span>
+</div>
+<div class="absolute top-3 right-3 z-20">
+<button class="p-1 rounded-full bg-black/10 hover:bg-black/20 text-white backdrop-blur-sm transition-colors" onclick="toggleCardMenu('menu-card-2')">
+<span class="material-icons-round text-lg leading-none">more_vert</span>
+</button>
+<div class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 card-menu z-30" id="menu-card-2">
+<div class="py-1">
+<a class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50" href="#">
+<span class="material-icons-round text-slate-400 text-lg">edit</span> Modificar
+                                    </a>
+<button class="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-left" onclick="toggleVisibility('card-2'); toggleCardMenu('menu-card-2')">
+<span class="material-icons-round text-slate-400 text-lg">visibility_off</span> Ocultar
+                                    </button>
+<button class="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-left" onclick="openMarkRealizadaModal('card-2'); toggleCardMenu('menu-card-2')">
+<span class="material-icons-round text-slate-400 text-lg">check_circle</span> Marcar Realizada
+                                    </button>
+</div>
+</div>
+</div>
+<div class="relative h-48 overflow-hidden img-container">
+<img alt="Evento Próximo" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBV7jzXPqyTmw1YUcJZ6PiicCNeDU1bvp8XfxdDzYlU_U6U_zSDJKkKXJQ0OOrDLT7uG-4uLpHIRhbPJ2OOXQcmktTD3ALyHuyyJ_pvJy398pJmoRWIhqW0lW009zO4__q5VXtA5Darv8bU_y4xWzyd5pHQLYy1PCDWROBVXFAOcG2JaDACWJ_pipi3uqmSHNXOJFqUUCvvyz-8Sum2ZCumZDd8lGbci3BfXa_Sc51nmuqYB0yQMZq-4kNrasifJ4e_34AowOq-3fhQ"/>
+</div>
+<div class="p-5 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-2 pr-2">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white leading-tight">Evangelismo al Aire Libre</h3>
+</div>
+<div class="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400 mb-4">
+<span class="flex items-center gap-1">
+<span class="material-icons-round text-sm">calendar_today</span> 10 NOV
+                                </span>
+<span class="flex items-center gap-1">
+<span class="material-icons-round text-sm">schedule</span> 04:00 PM
+                                </span>
+</div>
+<div class="space-y-2 mb-4">
+<div class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+<span class="material-icons-round text-primary text-base mt-0.5">place</span>
+<span class="font-medium">Lugar: <span class="font-normal text-slate-500 dark:text-slate-400">Parque Central</span></span>
+</div>
+<div class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+<span class="material-icons-round text-primary text-base mt-0.5">star</span>
+<span class="font-medium">Especial: <span class="font-normal text-slate-500 dark:text-slate-400">Grupo de Teatro</span></span>
+</div>
+<div class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+<span class="material-icons-round text-primary text-base mt-0.5">person</span>
+<span class="font-medium">Director: <span class="font-normal text-slate-500 dark:text-slate-400">Líder Miguel J.</span></span>
+</div>
+<div class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+<span class="material-icons-round text-primary text-base mt-0.5">campaign</span>
+<span class="font-medium">Predicador: <span class="font-normal text-slate-500 dark:text-slate-400">Evangelista Invitado</span></span>
+</div>
+</div>
+<div class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between card-footer min-h-[53px]">
+</div>
+</div>
+</article>
+<article class="bg-white dark:bg-slate-800 rounded-3xl overflow-hidden ios-shadow border border-slate-100 dark:border-slate-700 flex flex-col group hover:border-primary/30 transition-all duration-300 relative opacity-75 grayscale-[0.5]" id="card-3">
+<div class="absolute top-3 left-3 z-20 badge-container flex items-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+<span class="material-icons-round text-[10px] mr-1">visibility_off</span>Oculto
+                            </span>
+</div>
+<div class="absolute top-3 right-3 z-20">
+<button class="p-1 rounded-full bg-slate-200/50 hover:bg-slate-200 text-slate-600 backdrop-blur-sm transition-colors dark:bg-slate-800/50 dark:text-slate-200" onclick="toggleCardMenu('menu-card-3')">
+<span class="material-icons-round text-lg leading-none">more_vert</span>
+</button>
+<div class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 card-menu z-30" id="menu-card-3">
+<div class="py-1">
+<a class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50" href="#">
+<span class="material-icons-round text-slate-400 text-lg">edit</span> Modificar
+                                    </a>
+<button class="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-left" onclick="toggleVisibility('card-3'); toggleCardMenu('menu-card-3')">
+<span class="material-icons-round text-slate-400 text-lg">visibility</span> Mostrar
+                                    </button>
+<button class="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-left" onclick="openMarkRealizadaModal('card-3'); toggleCardMenu('menu-card-3')">
+<span class="material-icons-round text-slate-400 text-lg">check_circle</span> Marcar Realizada
+                                    </button>
+</div>
+</div>
+</div>
+<div class="relative h-48 overflow-hidden bg-slate-100 dark:bg-slate-900 flex items-center justify-center group-hover:bg-slate-200 dark:group-hover:bg-slate-800 transition-colors img-container">
+<span class="material-icons-round text-6xl text-slate-300 dark:text-slate-600 group-hover:scale-110 transition-transform duration-300">church</span>
+</div>
+<div class="p-5 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-2 pr-2">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white leading-tight">Retiro de Líderes</h3>
+</div>
+<div class="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400 mb-4">
+<span class="flex items-center gap-1">
+<span class="material-icons-round text-sm">calendar_today</span> 01 DIC
+                                </span>
+<span class="flex items-center gap-1">
+<span class="material-icons-round text-sm">schedule</span> 08:00 AM
+                                </span>
+</div>
+<div class="space-y-2 mb-4">
+<div class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+<span class="material-icons-round text-primary text-base mt-0.5">place</span>
+<span class="font-medium">Lugar: <span class="font-normal text-slate-500 dark:text-slate-400">Salón de Conferencias</span></span>
+</div>
+<div class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+<span class="material-icons-round text-primary text-base mt-0.5">person</span>
+<span class="font-medium">Director: <span class="font-normal text-slate-500 dark:text-slate-400">Hna. Ana Torres</span></span>
+</div>
+<div class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+<span class="material-icons-round text-primary text-base mt-0.5">campaign</span>
+<span class="font-medium">Predicador: <span class="font-normal text-slate-500 dark:text-slate-400">Pastor Pedro T.</span></span>
+</div>
+</div>
+<div class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between card-footer min-h-[53px]">
+</div>
+</div>
+</article>
+</div>
+</div>
+</main>
+<button class="fixed bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg shadow-primary/40 flex items-center justify-center hover:bg-primary/90 hover:scale-105 transition-all duration-200 z-40 lg:hidden" onclick="toggleModal('modal-nuevo-evento')">
+<span class="material-icons-round text-2xl">add</span>
+</button>
+<button class="fixed bottom-10 right-10 w-16 h-16 bg-primary text-white rounded-full shadow-lg shadow-primary/40 hidden lg:flex items-center justify-center hover:bg-primary/90 hover:scale-110 transition-all duration-200 z-40 group" onclick="toggleModal('modal-nuevo-evento')">
+<span class="material-icons-round text-3xl group-hover:rotate-90 transition-transform duration-300">add</span>
+<span class="absolute right-full mr-4 bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Nuevo Evento</span>
+</button>
+</div>
+
+</body></html>
