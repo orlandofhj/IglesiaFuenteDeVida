@@ -175,7 +175,7 @@
             const filtroNota = document.getElementById('filtro-nota-cal').value;
 
             doc.setFontSize(18);
-            doc.text("Evaluación Ministerial (Calificación para Pastor)", 14, 22);
+            doc.text("Calificación para Pastor", 14, 22);
             doc.setFontSize(11);
             doc.text(`Filtro Estatus: ${filtroNota} | Fecha: ${new Date().toLocaleDateString()}`, 14, 30);
 
@@ -380,7 +380,7 @@
                             <div class="w-12 h-12 rounded-2xl bg-teal-100 dark:bg-teal-900/30 text-teal-600 flex items-center justify-center mb-4">
                                 <span class="material-icons-round text-2xl">verified_user</span>
                             </div>
-                            <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Evaluación Ministerial</h3>
+                            <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Calificaciones</h3>
                             <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Mide el progreso de los integrantes dentro de los ministerios y la nota cualitativa (Aprobado/Reprobado) para ser Pastor.</p>
                             
                             <div class="space-y-4 mb-6 mt-auto">
@@ -405,4 +405,5 @@
         </main>
     </div>
 </body>
+
 </html>
